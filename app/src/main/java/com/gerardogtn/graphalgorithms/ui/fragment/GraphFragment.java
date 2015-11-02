@@ -8,12 +8,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.gerardogtn.graphalgorithms.R;
+import com.gerardogtn.graphalgorithms.data.model.Node;
+import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class GraphFragment extends Fragment {
 
+    GraphView graphView;
 
     public GraphFragment() {
 
@@ -31,8 +34,13 @@ public class GraphFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_graph, container, false);
+        View v =  inflater.inflate(R.layout.fragment_graph, container, false);
+        graphView = (GraphView) v;
+        return v;
     }
 
+    public void addNode(Node node){
+        graphView.addNode(node);
+    }
 
 }

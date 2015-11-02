@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<com.gerardogtn.graphalgorithms.ui.view.GraphView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/txt_prueba"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
-        android:text="PRUEBA"
-        android:textColor="#000000"
-        android:textSize="24sp"/>
-
-</LinearLayout>
+    android:layout_height="match_parent"/>
