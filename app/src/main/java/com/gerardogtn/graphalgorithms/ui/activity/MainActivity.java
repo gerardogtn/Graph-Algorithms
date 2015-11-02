@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 import com.gerardogtn.graphalgorithms.R;
+import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-    private List<Integer> mNumbers;
     private GraphFragment mFragment;
 
     @Bind(R.id.toolbar)
@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         setUpSpinner();
         setUpGraphFragment();
-        mNumbers = new ArrayList<>();
     }
 
     @Override
@@ -67,12 +66,9 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab)
     void addNumber(){
-        Snackbar.make(mFab, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
-
         Random rn = new Random();
         int answer = rn.nextInt(11) + 1;
-        mNumbers.add(answer);
+        mFragment.addNode(new Node(answer));
     }
 
     private void setUpSpinner() {
