@@ -66,9 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab)
     void addNumber(){
-        Random rn = new Random();
-        int answer = rn.nextInt(11) + 1;
-        mFragment.addNode(new Node(answer));
+        mFragment.addNode(new Node());
     }
 
     private void setUpSpinner() {
