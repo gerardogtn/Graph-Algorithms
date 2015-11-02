@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -14,6 +13,7 @@ import android.view.View;
 import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 
@@ -25,16 +25,14 @@ public class GraphView extends View {
     public static final String TAG = GraphView.class.getSimpleName();
 
     public static final int BACKGROUND_COLOR = 0xFFF8EFE0;
-    public static final int TEXT_COLOR = 0x000000;
+    public static final int TEXT_COLOR = Color.BLACK;
 
-    private boolean wasMoved = false;
+    private boolean mWasMoved = false;
 
     private Paint mNodePaint;
     private Paint mEdgePaint;
     private Paint mBackgroundPaint;
     private Paint mTextPaint;
-
-    private Path mCurrentPath;
 
     private LinkedList<Node> mNodes;
     private Node mCurrentNode;
@@ -52,7 +50,7 @@ public class GraphView extends View {
         mNodePaint.setColor(Node.COLOR);
 
         mEdgePaint = new Paint();
-        mEdgePaint.setColor(Color.BLACK);
+        mEdgePaint.setColor(TEXT_COLOR);
         mEdgePaint.setStyle(Paint.Style.STROKE);
         mEdgePaint.setStrokeWidth(5);
 
@@ -63,25 +61,28 @@ public class GraphView extends View {
         mTextPaint.setColor(Color.BLACK);
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextSize(20);
-
-        mCurrentPath = new Path();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawPaint(mBackgroundPaint);
 
-        for (Node node : mNodes){
+        Iterator<Node> iterator = mNodes.descendingIterator();
+        while (iterator.hasNext()){
+            Node node = iterator.next();
+
             canvas.drawCircle(node.getX(),
                     node.getY(),
                     Node.RADIUS,
                     mNodePaint);
             canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mTextPaint);
 
+
             for (Edge edge : node.edges){
                 Node target = edge.getDestination();
                 canvas.drawLine(node.getX(), node.getY(), target.getX(), target.getY(), mEdgePaint);
             }
+
         }
     }
 
@@ -91,32 +92,26 @@ public class GraphView extends View {
 
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                wasMoved = false;
+                mWasMoved = false;
                 Node previousNode = mCurrentNode;
                 mCurrentNode = findNode(current);
-                if (mCurrentNode != null && previousNode != null && !mCurrentNode.equals(previousNode)){
-                    mCurrentNode.addEdge(previousNode);
-                    previousNode.addEdge(mCurrentNode);
-                    mCurrentNode = null;
-                    invalidate();
-                }
+                connectNode(previousNode);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mCurrentNode != null){
                     mCurrentNode.updatePosition(current);
-                    wasMoved = true;
+                    mWasMoved = true;
                     invalidate();
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                if (wasMoved){
+                if (mWasMoved){
                     mCurrentNode = null;
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 mCurrentNode = null;
                 break;
-
         }
 
         return true;
@@ -131,7 +126,6 @@ public class GraphView extends View {
         invalidate();
     }
 
-
     // REQUIRES: PointF is valid.
     // MODIFIES: None.
     // EFFECTS: Returns the first node found that encompasses PointF. Returns null if not found.
@@ -140,11 +134,26 @@ public class GraphView extends View {
         for (Node node : mNodes){
             boolean belongs = Math.pow(point.x - node.getX(), 2)
                     +  Math.pow(point.y - node.getY(), 2)
-                    < Math.pow(Node.RADIUS, 2);
+                    < Node.RADIUS_SQUARED;
+
             if (belongs){
                 return node;
             }
         }
         return null;
+    }
+
+
+    // REQUIRES: None.
+    // MODIFIES: None.
+    // EFFECTS:If mCurrent and previous node are not equal and not null, creates an edge between them.
+    // NOTE: Since the edges between nodes is a Set we don't have to worry for duplicate edges.
+    private void connectNode(Node previousNode) {
+        if (mCurrentNode != null && previousNode != null && !mCurrentNode.equals(previousNode)){
+            mCurrentNode.addEdge(previousNode);
+            previousNode.addEdge(mCurrentNode);
+            mCurrentNode = null;
+            invalidate();
+        }
     }
 }
