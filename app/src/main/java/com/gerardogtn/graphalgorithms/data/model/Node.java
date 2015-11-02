@@ -2,16 +2,19 @@ package com.gerardogtn.graphalgorithms.data.model;
 
 import android.graphics.PointF;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.gerardogtn.graphalgorithms.R;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Created by gerardogtn on 11/1/15.
  */
 public class Node {
 
-    public static final int COLOR = 0x22FF0000;
+    public static final int COLOR = 0xFF3F51B5;
     public static final float RADIUS =  50;
+    public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
 
     private static int sCounter = 0;
 
@@ -23,7 +26,7 @@ public class Node {
 
 
     // TODO: Change to private and implement iterable.
-    public List<Edge> edges;
+    public Set<Edge> edges;
 
     public Node(){
         this(-1);
@@ -34,7 +37,7 @@ public class Node {
         this.mData = mData;
         this.x = 100;
         this.y = 100;
-        edges = new ArrayList<>();
+        edges = new LinkedHashSet<>();
     }
 
     public int getId() {
@@ -81,7 +84,6 @@ public class Node {
         if (o == null || getClass() != o.getClass()) return false;
 
         Node node = (Node) o;
-
         return id == node.id;
     }
 
