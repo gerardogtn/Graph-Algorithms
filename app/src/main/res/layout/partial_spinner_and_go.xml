@@ -23,6 +23,6 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:src="@drawable/ic_send_white"/>
+        android:src="@mipmap/ic_send_white"/>
 
 </LinearLayout>
