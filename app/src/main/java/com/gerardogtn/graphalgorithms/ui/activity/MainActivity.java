@@ -2,7 +2,6 @@ package com.gerardogtn.graphalgorithms.ui.activity;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,15 +14,11 @@ import com.gerardogtn.graphalgorithms.R;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     private GraphFragment mFragment;
 
@@ -66,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab)
     void addNumber(){
-        mFragment.addNode(new Node());
+        mFragment.addNode(new Node(0));
     }
 
     private void setUpSpinner() {
@@ -82,5 +77,4 @@ public class MainActivity extends AppCompatActivity {
         ft.add(R.id.fgmt_main, mFragment);
         ft.commit();
     }
-
 }
