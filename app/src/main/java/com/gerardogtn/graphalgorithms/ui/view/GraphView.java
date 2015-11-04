@@ -5,16 +5,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.gerardogtn.graphalgorithms.data.model.Edge;
+import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 
 
 /**
@@ -34,8 +33,11 @@ public class GraphView extends View {
     private Paint mBackgroundPaint;
     private Paint mTextPaint;
 
-    private LinkedList<Node> mNodes;
+    private Graph mGraph;
     private Node mCurrentNode;
+    private Node mPreviousNode;
+
+    private ShowDialogListener insertListener;
 
 
     public GraphView(Context context) {
@@ -44,46 +46,15 @@ public class GraphView extends View {
 
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mNodes = new LinkedList<>();
-
-        mNodePaint = new Paint();
-        mNodePaint.setColor(Node.COLOR);
-
-        mEdgePaint = new Paint();
-        mEdgePaint.setColor(TEXT_COLOR);
-        mEdgePaint.setStyle(Paint.Style.STROKE);
-        mEdgePaint.setStrokeWidth(5);
-
-        mBackgroundPaint = new Paint();
-        mBackgroundPaint.setColor(BACKGROUND_COLOR);
-
-        mTextPaint = new Paint();
-        mTextPaint.setColor(Color.BLACK);
-        mTextPaint.setStyle(Paint.Style.FILL);
-        mTextPaint.setTextSize(20);
+        mGraph = Graph.getInstance(false);
+        setUpPaints();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawPaint(mBackgroundPaint);
-
-        Iterator<Node> iterator = mNodes.descendingIterator();
-        while (iterator.hasNext()){
-            Node node = iterator.next();
-
-            canvas.drawCircle(node.getX(),
-                    node.getY(),
-                    Node.RADIUS,
-                    mNodePaint);
-            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mTextPaint);
-
-
-            for (Edge edge : node.edges){
-                Node target = edge.getDestination();
-                canvas.drawLine(node.getX(), node.getY(), target.getX(), target.getY(), mEdgePaint);
-            }
-
-        }
+        drawEdges(canvas);
+        drawNodes(canvas);
     }
 
     @Override
@@ -93,15 +64,11 @@ public class GraphView extends View {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 mWasMoved = false;
-                Node previousNode = mCurrentNode;
-                mCurrentNode = findNode(current);
-                connectNode(previousNode);
+                handleNewEdge(current);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mCurrentNode != null){
-                    mCurrentNode.updatePosition(current);
-                    mWasMoved = true;
-                    invalidate();
+                    moveNode(current);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -119,41 +86,118 @@ public class GraphView extends View {
 
     // REQUIRES: None.
     // MODIFIES: this.
-    // EFFECTS: Adds node to mNodes and redraws.
+    // EFFECTS: Adds node to mNodes and redraw.
     public void addNode(Node node){
-        mNodes.push(node);
+        mGraph.addNode(node);
         mCurrentNode = null;
         invalidate();
     }
 
-    // REQUIRES: PointF is valid.
-    // MODIFIES: None.
-    // EFFECTS: Returns the first node found that encompasses PointF. Returns null if not found.
-    @Nullable
-    private Node findNode(PointF point){
-        for (Node node : mNodes){
-            boolean belongs = Math.pow(point.x - node.getX(), 2)
-                    +  Math.pow(point.y - node.getY(), 2)
-                    < Node.RADIUS_SQUARED;
-
-            if (belongs){
-                return node;
-            }
-        }
-        return null;
+    public void setEventListener(ShowDialogListener edgeListener){
+        this.insertListener = edgeListener;
     }
 
+    private void setUpPaints() {
+        setUpNodePaint();
+        setUpEdgePaint();
+        setUpBackgroundPaint();
+        setUpTextPaint();
+    }
+
+    private void setUpTextPaint() {
+        mTextPaint = new Paint();
+        mTextPaint.setColor(Color.BLACK);
+        mTextPaint.setStyle(Paint.Style.FILL);
+        mTextPaint.setTextSize(20);
+    }
+
+    private void setUpBackgroundPaint() {
+        mBackgroundPaint = new Paint();
+        mBackgroundPaint.setColor(BACKGROUND_COLOR);
+    }
+
+    private void setUpEdgePaint() {
+        mEdgePaint = new Paint();
+        mEdgePaint.setColor(TEXT_COLOR);
+        mEdgePaint.setStyle(Paint.Style.STROKE);
+        mEdgePaint.setStrokeWidth(5);
+        mEdgePaint.setAntiAlias(true);
+    }
+
+    private void setUpNodePaint() {
+        mNodePaint = new Paint();
+        mNodePaint.setColor(Node.COLOR);
+        mNodePaint.setAntiAlias(true);
+    }
 
     // REQUIRES: None.
     // MODIFIES: None.
-    // EFFECTS:If mCurrent and previous node are not equal and not null, creates an edge between them.
-    // NOTE: Since the edges between nodes is a Set we don't have to worry for duplicate edges.
-    private void connectNode(Node previousNode) {
-        if (mCurrentNode != null && previousNode != null && !mCurrentNode.equals(previousNode)){
-            mCurrentNode.addEdge(previousNode);
-            previousNode.addEdge(mCurrentNode);
-            mCurrentNode = null;
-            invalidate();
+    // EFFECTS:  Draws nodes to screen from first added to last added.
+    private void drawNodes(Canvas canvas) {
+        Iterator<Node> iterator = mGraph.getmNodes().descendingIterator();
+        while (iterator.hasNext()){
+            Node node = iterator.next();
+
+            canvas.drawCircle(node.getX(),
+                    node.getY(),
+                    Node.RADIUS,
+                    mNodePaint);
+            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mTextPaint);
         }
     }
+
+    // REQUIRES: None.
+    // MODIFIES: None.
+    // EFFECTS:  Draws edges.
+    private void drawEdges(Canvas canvas) {
+        for (Edge edge : mGraph.getmEdges()){
+            Node origin = edge.getOrigin();
+            Node destination = edge.getDestination();
+            canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), mEdgePaint);
+        }
+    }
+
+    // REQUIRES: None.
+    // MODIFIES: this.
+    // EFFECTS:  Updates mCurrentNode position and redraws.
+    private void moveNode(PointF current) {
+        mCurrentNode.updatePosition(current);
+        mWasMoved = true;
+        invalidate();
+    }
+
+    // REQUIRES: None.
+    // MODIFIES: this.
+    // EFFECTS:  Sets up attributes and shows edge dialog if necessary.
+    private void handleNewEdge(PointF point) {
+        mPreviousNode = mCurrentNode;
+        mCurrentNode = mGraph.findNextNode(point);
+        setUpEdgeDialog();
+    }
+
+    // REQUIRES: insertListener is not null.
+    // MODIFIES: this.
+    // EFFECTS:  If mCurrentNode and mPreviousNode are not null and are not equal to each other,
+    // then display AddEdgeDialog.
+    private void setUpEdgeDialog() {
+        if (mCurrentNode != null && mPreviousNode != null && !mCurrentNode.equals(mPreviousNode)) {
+            insertListener.showEdgeDialog();
+        }
+    }
+
+    // ASSUMES:  mCurrentNode is not null and mPreviousNode is not null.
+    // MODIFIES: this.
+    // EFFECTS:  Adds edge to GraphView and redraws.
+    public void addEdge(int weight){
+        mGraph.addEdge(mPreviousNode, mCurrentNode, weight);
+        mCurrentNode = null;
+        mPreviousNode = null;
+        invalidate();
+    }
+
+    public interface ShowDialogListener {
+        void showEdgeDialog();
+        void showNodeDialog();
+    }
+
 }
