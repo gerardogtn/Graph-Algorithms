@@ -9,6 +9,7 @@ import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * Created by gerardogtn on 11/3/15.
@@ -26,6 +27,8 @@ public class Graph {
     private static Set<Edge> mEdges;
     private static LinkedList<Node> mNodes;
 
+    private OnGraphUpdateListener listener;
+
     private Graph(boolean isDirected){
         mEdges = new LinkedHashSet<>();
         mNodes = new LinkedList<>();
@@ -39,16 +42,16 @@ public class Graph {
         return mInstance;
     }
 
-    public void addEdge(int originId, int destinationId, int weight){
+    public synchronized void addEdge(int originId, int destinationId, int weight){
         Edge edge = new Edge(originId, destinationId, weight, isDirected);
         mEdges.add(edge);
     }
 
-    public void addEdge(Edge edge){
+    public synchronized void addEdge(Edge edge){
         mEdges.add(edge);
     }
 
-    public void addEdge(Node origin, Node destination, int weight){
+    public synchronized void addEdge(Node origin, Node destination, int weight){
         Edge edge = new Edge(origin, destination, weight, isDirected);
         Log.d(TAG, "Edge with origin: "
                 + origin.getId()
@@ -60,8 +63,12 @@ public class Graph {
         mEdges.add(edge);
     }
 
-    public void addNode(Node node){
+    public synchronized void addNode(Node node){
         mNodes.push(node);
+    }
+
+    public void setOnGraphUpdateListener(OnGraphUpdateListener listener){
+        this.listener = listener;
     }
 
     public int getNodesSize(){
@@ -110,4 +117,42 @@ public class Graph {
         }
         throw new NodeIdNotFoundException(id);
     }
+
+    public synchronized void dfs() throws InterruptedException{
+        Node node = mNodes.getLast();
+        Stack<Node> stack = new Stack<>();
+        node.setVisited(true);
+        stack.push(node);
+        listener.redraw();
+        Thread.sleep(700);
+
+        Node node2;
+        boolean found;
+
+        while(!stack.empty()){
+            node2 = stack.peek();
+            found = false;
+
+            for(Edge edge : mEdges){
+                if(edge.getOrigin().getId() == node2.getId() && !edge.getDestination().wasVisited()){
+                    edge.getDestination().setVisited(true);
+                    stack.push(edge.getDestination());
+                    Log.d("DFS", edge.getDestination().toString());
+                    found = true;
+                    listener.redraw();
+                    Thread.sleep(700);
+                    break;
+                }
+            }
+
+            if(!found){
+                stack.pop();
+            }
+        }
+    }
+
+    public interface OnGraphUpdateListener{
+        void redraw();
+    }
+
 }
