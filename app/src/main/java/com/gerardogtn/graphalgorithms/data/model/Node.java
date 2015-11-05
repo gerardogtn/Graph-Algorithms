@@ -13,6 +13,7 @@ import java.util.Set;
 public class Node {
 
     public static final int COLOR = 0xFF3F51B5;
+    public static final int COLOR_VISITED = 0xFFFF5722;
     public static final float RADIUS =  50;
     public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
 
@@ -69,6 +70,14 @@ public class Node {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public void setActive(boolean mIsActive) {
+        this.mIsActive = mIsActive;
+    }
+
+    public void setVisited(boolean mWasVisited) {
+        this.mWasVisited = mWasVisited;
     }
 
     public void updatePosition(PointF current) {
