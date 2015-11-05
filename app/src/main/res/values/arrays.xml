@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="modes_array">
-        <item>Todos</item>
+        <item>All</item>
+        <item>Depth First Search</item>
+        <item>Breadth First Search</item>
         <item>Prim</item>
         <item>Kruskal</item>
         <item>Dijkstra</item>
         <item>Bellman Ford</item>
+        <item>Floyd Warshall</item>
     </string-array>
 </resources>
