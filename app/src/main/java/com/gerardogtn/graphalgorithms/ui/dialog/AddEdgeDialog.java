@@ -1,15 +1,12 @@
 package com.gerardogtn.graphalgorithms.ui.dialog;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -20,8 +17,6 @@ import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
  * Created by gerardogtn on 11/3/15.
  */
 public class AddEdgeDialog extends DialogFragment implements DialogInterface.OnClickListener{
-
-    public static final String ARG_EDGE_WEIGHT = "edge_weight";
 
     private TextView mTextView;
     private OnCreateEdgeListener mListener;

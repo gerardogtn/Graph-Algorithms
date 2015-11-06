@@ -279,7 +279,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             } else if (mIndex == 1) {
                 mGraph.dfs();
             } else if (mIndex == 2) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+                mGraph.bfs();
             } else if (mIndex == 3) {
                 Log.d(TAG, "Opcion: " + mIndex + " no implementada");
             } else if (mIndex == 4) {

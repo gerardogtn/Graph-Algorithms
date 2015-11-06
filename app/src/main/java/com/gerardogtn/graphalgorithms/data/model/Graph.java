@@ -9,6 +9,7 @@ import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
@@ -167,6 +168,33 @@ public class Graph {
 
             if(!found){
                 stack.pop();
+            }
+        }
+    }
+
+
+    public synchronized void bfs() throws InterruptedException{
+        Queue<Node> queue = new LinkedList<Node>();
+        Node node = mNodes.getLast();
+        node.setVisited(true);
+        listener.redraw();
+        Thread.sleep(700);
+
+        queue.add(node);
+        while(queue.peek() != null){
+            for (Edge edge : getEdgesFromNode(queue.remove())){
+                if (!edge.getDestination().wasVisited()){
+                    edge.setActive(true);
+                    listener.redraw();
+                    Thread.sleep(200);
+                    edge.getDestination().setVisited(true);
+                    queue.add(edge.getDestination());
+                    listener.redraw();
+                    Thread.sleep(700);
+                }
+                edge.setActive(false);
+                listener.redraw();
+                Thread.sleep(200);
             }
         }
     }
