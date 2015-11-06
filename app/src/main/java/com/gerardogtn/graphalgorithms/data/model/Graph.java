@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class Graph {
         this.isDirected = isDirected;
     }
 
-    public static<Type> Graph getInstance(boolean isDirected){
+    public static Graph getInstance(boolean isDirected){
         if (mInstance == null){
             mInstance = new Graph(isDirected);
         }
@@ -53,13 +54,6 @@ public class Graph {
 
     public synchronized void addEdge(Node origin, Node destination, int weight){
         Edge edge = new Edge(origin, destination, weight, isDirected);
-        Log.d(TAG, "Edge with origin: "
-                + origin.getId()
-                + ", destination: "
-                + destination.getId()
-                + ", and weight: "
-                + weight
-                + " was created!");
         mEdges.add(edge);
     }
 
@@ -79,14 +73,26 @@ public class Graph {
         return mEdges.size();
     }
 
-    public Set<Edge> getmEdges() {
+    public Set<Edge> getEdges() {
         return mEdges;
     }
 
-    public LinkedList<Node> getmNodes() {
+    public LinkedList<Node> getNodes() {
         return mNodes;
     }
 
+    public LinkedList<Edge> getEdgesFromNode(Node node){
+        LinkedList<Edge> output = new LinkedList<>();
+
+        for (Edge edge : mEdges){
+            if (edge.getOrigin().equals(node)){
+                output.push(edge);
+            }
+        }
+
+        Collections.sort(output);
+        return output;
+    }
 
     // REQUIRES: PointF is valid.
     // MODIFIES: None.
@@ -118,6 +124,17 @@ public class Graph {
         throw new NodeIdNotFoundException(id);
     }
 
+    // REQUIRES: None.
+    // MODIFIES: this.
+    // EFFECTS:  Sets all nodes to not visited
+    public synchronized void clearVisited(){
+        for (Node node : mNodes){
+            node.setVisited(false);
+        }
+    }
+
+
+    // TODO: Handle synchronized locks to avoid skipping frames.
     public synchronized void dfs() throws InterruptedException{
         Node node = mNodes.getLast();
         Stack<Node> stack = new Stack<>();
@@ -126,23 +143,26 @@ public class Graph {
         listener.redraw();
         Thread.sleep(700);
 
-        Node node2;
         boolean found;
-
         while(!stack.empty()){
-            node2 = stack.peek();
+            Node currentNode = stack.peek();
             found = false;
 
-            for(Edge edge : mEdges){
-                if(edge.getOrigin().getId() == node2.getId() && !edge.getDestination().wasVisited()){
+            for(Edge edge : getEdgesFromNode(currentNode)){
+                if(!edge.getDestination().wasVisited()){
+                    edge.setActive(true);
+                    listener.redraw();
+                    Thread.sleep(200);
                     edge.getDestination().setVisited(true);
                     stack.push(edge.getDestination());
-                    Log.d("DFS", edge.getDestination().toString());
                     found = true;
                     listener.redraw();
                     Thread.sleep(700);
                     break;
                 }
+                edge.setActive(false);
+                listener.redraw();
+                Thread.sleep(200);
             }
 
             if(!found){
