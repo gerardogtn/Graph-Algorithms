@@ -53,15 +53,21 @@ public class MainActivity extends AppCompatActivity{
 
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == R.id.action_done){
+            mFragment.clearVisited();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-
     @OnClick(R.id.fab)
     void addNumber(){
         mFragment.addNode(new Node(0));
+    }
+
+    @OnClick(R.id.img_go)
+    void animateAlgorithm(){
+        mFragment.executeAlgorithm(mSpinner.getSelectedItemPosition());
     }
 
     private void setUpSpinner() {

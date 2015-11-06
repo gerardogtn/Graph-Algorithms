@@ -69,4 +69,12 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
     public void onCreateEdge(int weight) {
         graphView.addEdge(weight);
     }
+
+    public void executeAlgorithm(int index) {
+        graphView.executeAlgorithm(index);
+    }
+
+    public void clearVisited(){
+        graphView.clearVisited();
+    }
 }
