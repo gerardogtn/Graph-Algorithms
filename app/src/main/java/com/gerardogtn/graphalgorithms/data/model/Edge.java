@@ -1,13 +1,18 @@
 package com.gerardogtn.graphalgorithms.data.model;
 
+import android.support.annotation.NonNull;
+
+import java.util.Comparator;
+
 /**
  * Created by gerardogtn on 11/1/15.
  */
-public class Edge {
+public class Edge implements Comparable<Edge>{
 
     private Node origin;
     private Node destination;
 
+    private boolean mIsActive = false;
     private boolean isDirected;
     private int weight;
 
@@ -45,6 +50,10 @@ public class Edge {
         return weight;
     }
 
+    public boolean isActive() {
+        return mIsActive;
+    }
+
     public void setOrigin(Node origin) {
         this.origin = origin;
     }
@@ -61,5 +70,12 @@ public class Edge {
         this.weight = weight;
     }
 
+    public void setActive(boolean isActive) {
+        this.mIsActive = isActive;
+    }
 
+    @Override
+    public int compareTo(@NonNull Edge edge) {
+        return this.weight - edge.getWeight();
+    }
 }
