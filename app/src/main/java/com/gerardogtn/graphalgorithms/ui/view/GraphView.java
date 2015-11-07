@@ -360,7 +360,11 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mDbHandler.clearNodes();
         mGraph.clearNodes();
         Node.resetCounter();
-        redraw();
+    }
+
+    public void clearEdges() {
+        mDbHandler.clearEdges();
+        mGraph.clearEdges();
     }
 
     public interface ShowDialogListener {

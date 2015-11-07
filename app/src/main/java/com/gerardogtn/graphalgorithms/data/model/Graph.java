@@ -218,6 +218,10 @@ public class Graph {
         mNodes = new LinkedList<>();
     }
 
+    public void clearEdges() {
+        mEdges = new LinkedHashSet<>();
+    }
+
     public interface OnGraphUpdateListener{
         void redraw();
     }

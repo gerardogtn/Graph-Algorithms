@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity{
         } else if (id == R.id.action_done){
             mFragment.clearVisited();
         } else if (id == R.id.action_clear){
-            mFragment.clearNodes();
+            mFragment.clearGraph();
         }
 
         return super.onOptionsItemSelected(item);

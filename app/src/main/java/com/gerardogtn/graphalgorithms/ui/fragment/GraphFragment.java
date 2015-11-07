@@ -86,7 +86,9 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.clearVisited();
     }
 
-    public void clearNodes() {
+    public void clearGraph() {
+        graphView.clearEdges();
         graphView.clearNodes();
+        graphView.redraw();
     }
 }
