@@ -55,13 +55,15 @@ public class MainActivity extends AppCompatActivity{
             return true;
         } else if (id == R.id.action_done){
             mFragment.clearVisited();
+        } else if (id == R.id.action_clear){
+            mFragment.clearNodes();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     @OnClick(R.id.fab)
-    void addNumber(){
+    void addNode(){
         mFragment.addNode(new Node(0));
     }
 
