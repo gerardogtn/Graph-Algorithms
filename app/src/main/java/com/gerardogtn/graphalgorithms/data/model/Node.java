@@ -12,10 +12,14 @@ import java.util.Set;
  */
 public class Node {
 
+    private int id;
+
     public static final int COLOR = 0xFF3F51B5;
     public static final int COLOR_VISITED = 0xFFFF5722;
     public static final float RADIUS =  50;
     public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
+
+    private static int sCounter = 0;
 
     private float x;
     private float y;
@@ -23,8 +27,6 @@ public class Node {
     private boolean mWasVisited;
     private boolean mIsActive;
 
-    private static int sCounter = 0;
-    private int id;
     private int mData;
 
     public Node(int mData) {
@@ -60,15 +62,19 @@ public class Node {
         return mIsActive;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public void setData(int mData) {
         this.mData = mData;
     }
 
-    public void setX(int x) {
+    public void setX(float x) {
         this.x = x;
     }
 
-    public void setY(int y) {
+    public void setY(float y) {
         this.y = y;
     }
 
@@ -83,6 +89,10 @@ public class Node {
     public void updatePosition(PointF current) {
         this.x = current.x;
         this.y = current.y;
+    }
+
+    public static void resetCounter(){
+        sCounter = 0;
     }
 
     @Override

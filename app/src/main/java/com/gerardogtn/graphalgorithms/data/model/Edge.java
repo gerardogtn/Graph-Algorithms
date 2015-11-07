@@ -2,12 +2,14 @@ package com.gerardogtn.graphalgorithms.data.model;
 
 import android.support.annotation.NonNull;
 
-import java.util.Comparator;
 
 /**
  * Created by gerardogtn on 11/1/15.
  */
 public class Edge implements Comparable<Edge>{
+
+    private int id;
+    private static int sCounter = 0;
 
     private Node origin;
     private Node destination;
@@ -25,6 +27,7 @@ public class Edge implements Comparable<Edge>{
         this.destination = destination;
         this.weight = weight;
         this.isDirected = isDirected;
+        this.id = ++sCounter;
     }
 
     public Edge(int originId, int destinationId, boolean isDirected){
@@ -56,6 +59,10 @@ public class Edge implements Comparable<Edge>{
 
     public void setOrigin(Node origin) {
         this.origin = origin;
+    }
+
+    public void setDestination(Node destination) {
+        this.destination = destination;
     }
 
     public boolean isDirected() {

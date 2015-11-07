@@ -2,16 +2,18 @@ package com.gerardogtn.graphalgorithms.data.model;
 
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+
 
 /**
  * Created by gerardogtn on 11/3/15.
@@ -44,11 +46,6 @@ public class Graph {
         return mInstance;
     }
 
-    public synchronized void addEdge(int originId, int destinationId, int weight){
-        Edge edge = new Edge(originId, destinationId, weight, isDirected);
-        mEdges.add(edge);
-    }
-
     public synchronized void addEdge(Edge edge){
         mEdges.add(edge);
     }
@@ -60,6 +57,25 @@ public class Graph {
 
     public synchronized void addNode(Node node){
         mNodes.push(node);
+    }
+
+    public synchronized void addNodes(List<Node> nodes){
+        for (Node node : nodes){
+            addNode(node);
+        }
+    }
+
+    public synchronized void addEdges(List<Edge> edges){
+        for (Edge edge : edges){
+            addEdge(edge);
+        }
+    }
+
+    public synchronized void addNodesReverse(LinkedList<Node> nodes){
+        Iterator<Node> iterator = nodes.descendingIterator();
+        while (iterator.hasNext()){
+            addNode(iterator.next());
+        }
     }
 
     public void setOnGraphUpdateListener(OnGraphUpdateListener listener){
@@ -134,7 +150,6 @@ public class Graph {
         }
     }
 
-
     // TODO: Handle synchronized locks to avoid skipping frames.
     public synchronized void dfs() throws InterruptedException{
         Node node = mNodes.getLast();
@@ -197,6 +212,10 @@ public class Graph {
                 Thread.sleep(200);
             }
         }
+    }
+
+    public synchronized void clearNodes() {
+        mNodes = new LinkedList<>();
     }
 
     public interface OnGraphUpdateListener{
