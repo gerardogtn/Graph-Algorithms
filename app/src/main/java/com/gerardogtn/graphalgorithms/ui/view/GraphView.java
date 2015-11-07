@@ -10,11 +10,13 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.gerardogtn.graphalgorithms.data.local.GraphDbHandler;
 import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 
 
 /**
@@ -45,6 +47,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private Node mPreviousNode;
 
     private ShowDialogListener insertListener;
+    private Context mContext;
+    private GraphDbHandler mDbHandler;
 
     public GraphView(Context context) {
         this(context, null);
@@ -52,9 +56,37 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context.getApplicationContext();
         mGraph = Graph.getInstance(false);
         mGraph.setOnGraphUpdateListener(this);
+        mDbHandler = new GraphDbHandler(mContext);
         setUpPaints();
+        loadGraph();
+    }
+
+    public void loadGraph() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mGraph.addNodesReverse(mDbHandler.getNodes());
+                mGraph.addEdges(mDbHandler.getEdges());
+            }
+        });
+        thread.start();
+        redraw();
+    }
+
+    public void saveGraph(){
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mDbHandler.clearNodes();
+                mDbHandler.writeNodes(mGraph.getNodes());
+                mDbHandler.clearEdges();
+                mDbHandler.writeEdges(mGraph.getEdges());
+            }
+        });
+        thread.start();
     }
 
     @Override
@@ -94,10 +126,31 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // REQUIRES: None.
     // MODIFIES: this.
     // EFFECTS: Adds node to mNodes and redraw.
-    public void addNode(Node node) {
+    public void addNode(final Node node) {
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mDbHandler.writeNode(node);
+            }
+        });
+        thread.start();
+
         mGraph.addNode(node);
         mCurrentNode = null;
         invalidate();
+    }
+
+    public void setNodes(LinkedList<Node> nodes){
+        for (Node node : nodes){
+            mGraph.addNode(node);
+        }
+    }
+
+    public void setEdges(LinkedList<Edge> edges){
+        for (Edge edge : edges){
+            mGraph.addEdge(edge);
+        }
     }
 
     public void setEventListener(ShowDialogListener edgeListener) {
@@ -239,7 +292,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this.
     // EFFECTS:  Adds edge to GraphView and redraws.
     public void addEdge(int weight) {
-        assert (mCurrentNode != null && mPreviousNode != null);
         mGraph.addEdge(mPreviousNode, mCurrentNode, weight);
         mCurrentNode = null;
         mPreviousNode = null;
@@ -302,6 +354,13 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     public void clearVisited() {
         mGraph.clearVisited();
         invalidate();
+    }
+
+    public void clearNodes() {
+        mDbHandler.clearNodes();
+        mGraph.clearNodes();
+        Node.resetCounter();
+        redraw();
     }
 
     public interface ShowDialogListener {
