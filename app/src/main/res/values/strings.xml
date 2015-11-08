@@ -10,4 +10,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_code_visualization">CodeVisualizationActivity</string>
     <string name="clear_graph">Clear graph</string>
+    <string name="clear_algorithm">Clear algorithm</string>
+    <string name="share_graph">Share graph</string>
+    <string name="default_animation_speed">Default animation speed</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.gerardogtn.graphalgorithms.data.model;
 
 import android.graphics.PointF;
+import android.support.annotation.NonNull;
 
 import com.gerardogtn.graphalgorithms.R;
 
@@ -10,7 +11,7 @@ import java.util.Set;
 /**
  * Created by gerardogtn on 11/1/15.
  */
-public class Node {
+public class Node implements Comparable<Node>{
 
     private int id;
 
@@ -28,6 +29,7 @@ public class Node {
     private boolean mIsActive;
 
     private int mData;
+    private int mDistance;
 
     public Node(int mData) {
         id = ++sCounter;
@@ -36,6 +38,7 @@ public class Node {
         this.y = 100;
         this.mIsActive = false;
         this.mWasVisited = false;
+        this.mDistance = 0;
     }
 
     public int getId() {
@@ -62,6 +65,10 @@ public class Node {
         return mIsActive;
     }
 
+    public int getDistance() {
+        return mDistance;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -84,6 +91,10 @@ public class Node {
 
     public void setVisited(boolean mWasVisited) {
         this.mWasVisited = mWasVisited;
+    }
+
+    public void setDistance(int distance) {
+        this.mDistance = distance;
     }
 
     public void updatePosition(PointF current) {
@@ -110,5 +121,10 @@ public class Node {
         result = 31 * result + (y != +0.0f ? Float.floatToIntBits(y) : 0);
         result = 31 * result + id;
         return result;
+    }
+
+    @Override
+    public int compareTo(@NonNull Node node) {
+        return this.mDistance - node.getDistance();
     }
 }
