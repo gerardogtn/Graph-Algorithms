@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity{
             return true;
         } else if (id == R.id.action_done){
             mFragment.clearVisited();
+            mFab.show();
         } else if (id == R.id.action_clear){
             mFragment.clearGraph();
         }
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity{
 
     @OnClick(R.id.img_go)
     void animateAlgorithm(){
+        mFab.hide();
         mFragment.executeAlgorithm(mSpinner.getSelectedItemPosition());
     }
 
