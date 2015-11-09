@@ -14,10 +14,9 @@ import com.gerardogtn.graphalgorithms.data.local.GraphDbHandler;
 import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
+import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -55,8 +54,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private ShowDialogListener insertListener;
     private Context mContext;
     private GraphDbHandler mDbHandler;
+    private OnStopAnimationListener mStopListener;
 
-    private List<Edge> mConnections;
     private Paint mConnectionPaint;
     private Paint mTextConnectionPaint;
 
@@ -74,6 +73,19 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         loadGraph();
     }
 
+    public void saveGraph() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mDbHandler.clearEdges();
+                mDbHandler.writeEdges(mGraph.getEdges());
+                mDbHandler.clearNodes();
+                mDbHandler.writeNodes(mGraph.getNodes());
+            }
+        });
+        thread.start();
+    }
+
     public void loadGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -86,19 +98,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         redraw();
     }
 
-    public void saveGraph() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mDbHandler.clearNodes();
-                mDbHandler.writeNodes(mGraph.getNodes());
-                mDbHandler.clearEdges();
-                mDbHandler.writeEdges(mGraph.getEdges());
-            }
-        });
-        thread.start();
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawPaint(mBackgroundPaint);
@@ -108,7 +107,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         }
         drawNodes(canvas);
     }
-
 
     // REQUIRES: None.
     // MODIFIES: None.
@@ -284,6 +282,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mBackgroundPaint.setColor(BACKGROUND_COLOR);
     }
 
+    // TODO: Refactor.
     private void setUpEdgePaint() {
         mEdgePaint = new Paint();
         mEdgePaint.setColor(Color.BLACK);
@@ -324,13 +323,13 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this.
     // EFFECTS:  Updates mCurrentNode position and redraws.
     private void moveNode(PointF current) {
-        if (current.x > getWidth() || current.x < 0 || current.y > getHeight() || current.y < 0) {
-
-        } else {
+        boolean cantMove = current.x > getWidth() || current.x < 0 ||
+                current.y > getHeight() || current.y < 0;
+        if (!cantMove) {
             mCurrentNode.updatePosition(current);
             mWasMoved = true;
+            invalidate();
         }
-        invalidate();
     }
 
     // REQUIRES: None.
@@ -410,7 +409,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             } else if (mIndex == 5) {
                 mGraph.dijkstra();
             } else if (mIndex == 6) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+                mGraph.bellmanFord();
             } else if (mIndex == 7) {
                 Log.d(TAG, "Opcion: " + mIndex + " no implementada");
             } else {
@@ -420,6 +419,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             Thread.currentThread().interrupt();
             e.printStackTrace();
         }
+        mStopListener.stopAnimation();
     }
 
     public void resetGraph() {
@@ -438,11 +438,17 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mGraph.clearEdges();
     }
 
+    public void setOnStopListener(MainActivity onStopListener) {
+        this.mStopListener = onStopListener;
+    }
+
     public interface ShowDialogListener {
         void showEdgeDialog();
-
         void showNodeDialog();
     }
 
+    public interface OnStopAnimationListener{
+        void stopAnimation();
+    }
 
 }

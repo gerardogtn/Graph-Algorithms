@@ -16,11 +16,11 @@ public class NodeDbSchema {
 
     public static final String CREATE_TABLE =
             "CREATE TABLE " + TABLE_NAME + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY ON CONFLICT REPLACE, " +
-                    COLUMN_DATA + " INTEGER NOT NULL, " +
+                    COLUMN_ID         + " INTEGER PRIMARY KEY ON CONFLICT REPLACE, " +
+                    COLUMN_DATA       + " INTEGER NOT NULL, " +
                     COLUMN_X_POSITION + " REAL NOT NULL, " +
                     COLUMN_Y_POSITION + " REAL NOT NULL, " +
-                    COLUMN_IS_ACTIVE + " INTEGER NOT NULL, " +
+                    COLUMN_IS_ACTIVE  + " INTEGER NOT NULL, " +
                     COLUMN_IS_VISITED + " INTEGER NOT NULL" +
                     " ); ";
 

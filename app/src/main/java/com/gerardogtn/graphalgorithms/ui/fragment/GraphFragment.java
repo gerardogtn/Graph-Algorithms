@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import com.gerardogtn.graphalgorithms.R;
 import com.gerardogtn.graphalgorithms.data.local.GraphDbHandler;
 import com.gerardogtn.graphalgorithms.data.model.Node;
+import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddEdgeDialog;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddNodeDialog;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
@@ -44,6 +45,7 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         View root =  inflater.inflate(R.layout.fragment_graph, container, false);
         graphView = (GraphView) root;
         graphView.setEventListener(this);
+        setOnStopListener();
 
         return root;
     }
@@ -90,5 +92,9 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.clearEdges();
         graphView.clearNodes();
         graphView.redraw();
+    }
+
+    public void setOnStopListener(){
+        graphView.setOnStopListener((MainActivity) getActivity());
     }
 }
