@@ -17,6 +17,7 @@ import com.gerardogtn.graphalgorithms.data.model.Node;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -33,14 +34,19 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private int mIndex = 0;
     private boolean mWasMoved = false;
     private boolean mIsDialogActive = false;
+    private boolean mShowConnections = false;
+
+    private Paint mBackgroundPaint;
 
     private Paint mNodePaint;
     private Paint mNodeVisitedPaint;
+    private Paint mNodeTextPaint;
+
     private Paint mEdgePaint;
     private Paint mEdgeActivePaint;
-    private Paint mBackgroundPaint;
-    private Paint mNodeTextPaint;
+    private Paint mEdgeIdlePaint;
     private Paint mEdgeTextPaint;
+    private Paint mEdgeIdleTextPaint;
 
     private Graph mGraph;
     private Node mCurrentNode;
@@ -49,6 +55,10 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private ShowDialogListener insertListener;
     private Context mContext;
     private GraphDbHandler mDbHandler;
+
+    private List<Edge> mConnections;
+    private Paint mConnectionPaint;
+    private Paint mTextConnectionPaint;
 
     public GraphView(Context context) {
         this(context, null);
@@ -76,7 +86,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         redraw();
     }
 
-    public void saveGraph(){
+    public void saveGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -93,7 +103,85 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     protected void onDraw(Canvas canvas) {
         canvas.drawPaint(mBackgroundPaint);
         drawEdges(canvas);
+        if (mShowConnections) {
+            drawConnections(canvas);
+        }
         drawNodes(canvas);
+    }
+
+
+    // REQUIRES: None.
+    // MODIFIES: None.
+    // EFFECTS:  Draws nodes to screen from first added to last added.
+    private void drawNodes(Canvas canvas) {
+        Iterator<Node> iterator = mGraph.getNodes().descendingIterator();
+        while (iterator.hasNext()) {
+            Node node = iterator.next();
+            Paint paint = (node.wasVisited() ? mNodeVisitedPaint : mNodePaint);
+
+            canvas.drawCircle(node.getX(),
+                    node.getY(),
+                    Node.RADIUS,
+                    paint);
+
+            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mNodeTextPaint);
+        }
+    }
+
+    // REQUIRES: None.
+    // MODIFIES: None.
+    // EFFECTS:  Draws edges.
+    private void drawEdges(Canvas canvas) {
+        for (Edge edge : mGraph.getEdges()) {
+            Node origin = edge.getOrigin();
+            Node destination = edge.getDestination();
+
+            Paint paint = (edge.isActive() ? mEdgeActivePaint : mEdgePaint);
+            paint = (edge.isIdle() ? mEdgeIdlePaint : paint);
+            canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), paint);
+
+            if (!edge.isIdle()) {
+                drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
+                        origin.getX(), destination.getX(),
+                        origin.getY(), destination.getY());
+            }
+
+        }
+    }
+
+
+    // REQUIRES: None.
+    // MODIFIES: canvas.
+    // EFFECTS : If node has a parent not null and not equal to itself and with a distance less than
+    // max, then draw a line connecting node to parent with a text showing its distance.
+    private void drawConnections(Canvas canvas) {
+        for (Node node : mGraph.getNodes()) {
+            Node parent = node.getParent();
+            if (node.getDistance() != Integer.MAX_VALUE && parent != null && parent.getId() != node.getId()) {
+                canvas.drawLine(node.getX(), node.getY(), parent.getX(), parent.getY(), mConnectionPaint);
+
+                drawTextOnLine(canvas, node.getDistance() + "", mTextConnectionPaint,
+                        node.getX(), parent.getX(),
+                        node.getY(), parent.getY());
+            }
+        }
+    }
+
+    // REQUIRES: None.
+    // MODIFIES: canvas.
+    // EFFECTS : Draws text on perpendicular to line with offset.
+    private void drawTextOnLine(Canvas canvas, String text, Paint paint,
+                                float x0, float x1,
+                                float y0, float y1){
+
+        int offset = 30;
+        float length = (float) Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+        float xLen = x0 - x1;
+        float yLen = y0 - y1;
+        float xMid = (x0 + x1) /2;
+        float yMid = (y0 + y1) /2;
+
+        canvas.drawText(text, xMid + yLen* offset/length, yMid - xLen*offset/length, paint);
     }
 
     @Override
@@ -141,18 +229,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         invalidate();
     }
 
-    public void setNodes(LinkedList<Node> nodes){
-        for (Node node : nodes){
-            mGraph.addNode(node);
-        }
-    }
-
-    public void setEdges(LinkedList<Edge> edges){
-        for (Edge edge : edges){
-            mGraph.addEdge(edge);
-        }
-    }
-
     public void setEventListener(ShowDialogListener edgeListener) {
         this.insertListener = edgeListener;
     }
@@ -162,6 +238,24 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpEdgePaint();
         setUpBackgroundPaint();
         setUpTextPaint();
+        setUpConnectionPaint();
+        setUpConnectionTextPaint();
+    }
+
+    private void setUpConnectionTextPaint() {
+        mTextConnectionPaint = new Paint();
+        mTextConnectionPaint.setColor(Color.GREEN);
+        mTextConnectionPaint.setStyle(Paint.Style.FILL);
+        mTextConnectionPaint.setTextSize(24);
+        mTextConnectionPaint.setAntiAlias(true);
+    }
+
+    private void setUpConnectionPaint() {
+        mConnectionPaint = new Paint();
+        mConnectionPaint.setColor(Color.GREEN);
+        mConnectionPaint.setStyle(Paint.Style.STROKE);
+        mConnectionPaint.setStrokeWidth(5);
+        mConnectionPaint.setAntiAlias(true);
     }
 
     private void setUpTextPaint() {
@@ -202,6 +296,18 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mEdgeActivePaint.setStyle(Paint.Style.STROKE);
         mEdgeActivePaint.setStrokeWidth(5);
         mEdgeActivePaint.setAntiAlias(true);
+
+        mEdgeIdlePaint = new Paint();
+        mEdgeIdlePaint.setColor(Color.GRAY);
+        mEdgeActivePaint.setStyle(Paint.Style.STROKE);
+        mEdgeActivePaint.setStrokeWidth(5);
+        mEdgeActivePaint.setAntiAlias(true);
+
+        mEdgeIdleTextPaint = new Paint();
+        mEdgeIdleTextPaint.setColor(Color.GRAY);
+        mEdgeIdleTextPaint.setStyle(Paint.Style.FILL);
+        mEdgeIdleTextPaint.setTextSize(24);
+        mEdgeIdleTextPaint.setAntiAlias(true);
     }
 
     private void setUpNodePaint() {
@@ -213,53 +319,12 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mNodeVisitedPaint.setAntiAlias(true);
     }
 
-    // REQUIRES: None.
-    // MODIFIES: None.
-    // EFFECTS:  Draws nodes to screen from first added to last added.
-    private void drawNodes(Canvas canvas) {
-        Iterator<Node> iterator = mGraph.getNodes().descendingIterator();
-        while (iterator.hasNext()) {
-            Node node = iterator.next();
-            Paint paint = (node.wasVisited() ? mNodeVisitedPaint : mNodePaint);
-
-            canvas.drawCircle(node.getX(),
-                    node.getY(),
-                    Node.RADIUS,
-                    paint);
-
-            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mNodeTextPaint);
-        }
-    }
-
-    // REQUIRES: None.
-    // MODIFIES: None.
-    // EFFECTS:  Draws edges.
-    private void drawEdges(Canvas canvas) {
-        for (Edge edge : mGraph.getEdges()){
-            Node origin = edge.getOrigin();
-            Node destination = edge.getDestination();
-
-            Paint paint = (edge.isActive() ? mEdgeActivePaint : mEdgePaint);
-            canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), paint);
-
-            int increment = 20;
-            if (destination.getX() < origin.getX() &&
-                    Math.abs(destination.getY() - origin.getY()) < Node.RADIUS_SQUARED ) {
-                increment = -20;
-            }
-
-            canvas.drawText(edge.getWeight() + ""
-                    , (origin.getX() + destination.getX()) / 2 + increment
-                    , (origin.getY() + destination.getY()) / 2 + increment
-                    , mEdgeTextPaint);
-        }
-    }
 
     // REQUIRES: None.
     // MODIFIES: this.
     // EFFECTS:  Updates mCurrentNode position and redraws.
     private void moveNode(PointF current) {
-        if (current.x > getWidth() || current.x < 0 || current.y > getHeight() || current.y < 0){
+        if (current.x > getWidth() || current.x < 0 || current.y > getHeight() || current.y < 0) {
 
         } else {
             mCurrentNode.updatePosition(current);
@@ -309,11 +374,17 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         });
     }
 
+    @Override
+    public void connectNodes() {
+        this.mShowConnections = true;
+        redraw();
+    }
+
 
     // REQUIRES: None
     // MODIFIES: this
     // EFFECTS:  Initializes mIndex, and starts a new thread.
-    public void executeAlgorithm(int index){
+    public void executeAlgorithm(int index) {
         mIndex = index;
         Thread thread = new Thread(this);
         thread.start();
@@ -337,7 +408,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             } else if (mIndex == 4) {
                 Log.d(TAG, "Opcion: " + mIndex + " no implementada");
             } else if (mIndex == 5) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+                mGraph.dijkstra();
             } else if (mIndex == 6) {
                 Log.d(TAG, "Opcion: " + mIndex + " no implementada");
             } else if (mIndex == 7) {
@@ -351,8 +422,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         }
     }
 
-    public void clearVisited() {
-        mGraph.clearVisited();
+    public void resetGraph() {
+        mGraph.reset();
         invalidate();
     }
 

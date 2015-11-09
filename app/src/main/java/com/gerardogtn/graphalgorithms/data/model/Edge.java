@@ -16,6 +16,7 @@ public class Edge implements Comparable<Edge>{
 
     private boolean mIsActive = false;
     private boolean isDirected;
+    private boolean mIsIdle = false;
     private int weight;
 
     public Edge(Node origin, Node destination, boolean isDirected) {
@@ -57,6 +58,10 @@ public class Edge implements Comparable<Edge>{
         return mIsActive;
     }
 
+    public boolean isIdle() {
+        return mIsIdle;
+    }
+
     public void setOrigin(Node origin) {
         this.origin = origin;
     }
@@ -79,6 +84,10 @@ public class Edge implements Comparable<Edge>{
 
     public void setActive(boolean isActive) {
         this.mIsActive = isActive;
+    }
+
+    public void setIdle(boolean mIsIdle) {
+        this.mIsIdle = mIsIdle;
     }
 
     @Override

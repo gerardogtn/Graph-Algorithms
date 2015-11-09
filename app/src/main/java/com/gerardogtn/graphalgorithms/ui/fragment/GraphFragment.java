@@ -41,11 +41,11 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v =  inflater.inflate(R.layout.fragment_graph, container, false);
-        graphView = (GraphView) v;
+        View root =  inflater.inflate(R.layout.fragment_graph, container, false);
+        graphView = (GraphView) root;
         graphView.setEventListener(this);
 
-        return v;
+        return root;
     }
 
     @Override
@@ -82,8 +82,8 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.executeAlgorithm(index);
     }
 
-    public void clearVisited(){
-        graphView.clearVisited();
+    public void resetGraph(){
+        graphView.resetGraph();
     }
 
     public void clearGraph() {

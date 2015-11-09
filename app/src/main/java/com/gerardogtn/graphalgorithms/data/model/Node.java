@@ -15,6 +15,8 @@ public class Node implements Comparable<Node>{
 
     private int id;
 
+    public static final int MAX_VALUE = 0x0FFFFFFF;
+
     public static final int COLOR = 0xFF3F51B5;
     public static final int COLOR_VISITED = 0xFFFF5722;
     public static final float RADIUS =  50;
@@ -29,7 +31,11 @@ public class Node implements Comparable<Node>{
     private boolean mIsActive;
 
     private int mData;
+
+    // Used for dijkstra's algorithm.
     private int mDistance;
+    private Node mParent;
+
 
     public Node(int mData) {
         id = ++sCounter;
@@ -38,7 +44,7 @@ public class Node implements Comparable<Node>{
         this.y = 100;
         this.mIsActive = false;
         this.mWasVisited = false;
-        this.mDistance = 0;
+        this.mDistance = MAX_VALUE;
     }
 
     public int getId() {
@@ -69,6 +75,10 @@ public class Node implements Comparable<Node>{
         return mDistance;
     }
 
+    public Node getParent() {
+        return mParent;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -95,6 +105,10 @@ public class Node implements Comparable<Node>{
 
     public void setDistance(int distance) {
         this.mDistance = distance;
+    }
+
+    public void setParent(Node parent) {
+        this.mParent = parent;
     }
 
     public void updatePosition(PointF current) {

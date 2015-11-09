@@ -1,6 +1,6 @@
 package com.gerardogtn.graphalgorithms.data.model;
 
-public class Pair<First, Second>{
+public class Pair<First, Second extends Number> implements Comparable<Pair>{
 
     private First first;
     private Second second;
@@ -24,5 +24,10 @@ public class Pair<First, Second>{
 
     public void setSecond(Second second) {
         this.second = second;
+    }
+
+    @Override
+    public int compareTo(Pair pair) {
+        return (int) (this.second.floatValue() - pair.second.floatValue());
     }
 }

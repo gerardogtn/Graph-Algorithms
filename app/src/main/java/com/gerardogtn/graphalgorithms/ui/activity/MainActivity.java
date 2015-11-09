@@ -54,10 +54,11 @@ public class MainActivity extends AppCompatActivity{
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_done){
-            mFragment.clearVisited();
+            mFragment.resetGraph();
             mFab.show();
         } else if (id == R.id.action_clear){
             mFragment.clearGraph();
+            mFab.show();
         }
 
         return super.onOptionsItemSelected(item);
