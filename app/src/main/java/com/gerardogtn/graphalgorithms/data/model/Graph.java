@@ -2,6 +2,7 @@ package com.gerardogtn.graphalgorithms.data.model;
 
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 
@@ -276,15 +277,51 @@ public class Graph {
                     listener.connectNodes();
                     Thread.sleep(700);
                 }
+                edge.setIdle(true);
+                edge.setActive(false);
                 listener.redraw();
                 Thread.sleep(200);
             }
         }
     }
 
+    public synchronized void bellmanFord() throws InterruptedException{
+        boolean relax = true;
+        Node origin = mNodes.getLast();
+        origin.setDistance(0);
+
+        while(relax) {
+            relax = false;
+            for (Edge edge : mEdges) {
+
+                edge.setActive(true);
+                listener.redraw();
+                Thread.sleep(200);
+                if (edge.getOrigin().getDistance() + edge.getWeight() < edge.getDestination().getDistance()) {
+                    Node destination = edge.getDestination();
+                    Node originNode = edge.getOrigin();
+                    destination.setActive(true);
+                    destination.setDistance(originNode.getDistance() + edge.getWeight());
+                    destination.setParent(originNode);
+                    listener.connectNodes();
+                    Thread.sleep(700);
+                    relax = true;
+                }
+
+                edge.setIdle(true);
+                edge.setActive(false);
+                listener.redraw();
+                Thread.sleep(200);
+            }
+        }
+
+    }
+
     public interface OnGraphUpdateListener {
         void redraw();
         void connectNodes();
     }
+
+
 
 }
