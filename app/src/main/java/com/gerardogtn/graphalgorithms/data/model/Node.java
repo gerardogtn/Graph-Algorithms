@@ -3,11 +3,6 @@ package com.gerardogtn.graphalgorithms.data.model;
 import android.graphics.PointF;
 import android.support.annotation.NonNull;
 
-import com.gerardogtn.graphalgorithms.R;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 /**
  * Created by gerardogtn on 11/1/15.
  */
@@ -19,6 +14,7 @@ public class Node implements Comparable<Node>{
 
     public static final int COLOR = 0xFF3F51B5;
     public static final int COLOR_VISITED = 0xFFFF5722;
+    public static final int COLOR_ACTIVE = 0xFFF44336;
     public static final float RADIUS =  50;
     public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
 
@@ -36,6 +32,8 @@ public class Node implements Comparable<Node>{
     private int mDistance;
     private Node mParent;
 
+    // Used for kruskal algorithm.
+    private int mSet = -1;
 
     public Node(int mData) {
         id = ++sCounter;
@@ -79,6 +77,10 @@ public class Node implements Comparable<Node>{
         return mParent;
     }
 
+    public int getSet() {
+        return mSet;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -109,6 +111,10 @@ public class Node implements Comparable<Node>{
 
     public void setParent(Node parent) {
         this.mParent = parent;
+    }
+
+    public void setSet(int set) {
+        this.mSet = set;
     }
 
     public void updatePosition(PointF current) {
