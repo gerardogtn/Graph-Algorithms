@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.gerardogtn.graphalgorithms.R;
-import com.gerardogtn.graphalgorithms.data.local.GraphDbHandler;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddEdgeDialog;
