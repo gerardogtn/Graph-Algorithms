@@ -2,13 +2,10 @@ package com.gerardogtn.graphalgorithms.data.model;
 
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -35,6 +32,13 @@ public class Graph {
     private static LinkedList<Node> mNodes;
 
     private OnGraphUpdateListener listener;
+
+    public static final int NODE_VISITED_ANIMATION_TIME = 700;
+    public static final int NODE_ACTIVE_ANIMATION_TIME = 700;
+    public static final int EDGE_ACTIVE_ANIMATION_TIME = 400;
+    public static final int EDGE_IDLE_ANIMATION_TIME = 400;
+
+
 
     private Graph(boolean isDirected) {
         mEdges = new LinkedHashSet<>();
@@ -153,6 +157,7 @@ public class Graph {
             node.setDistance(Node.MAX_VALUE);
             node.setActive(false);
             node.setVisited(false);
+            node.setSet(-1);
         }
 
         for (Edge edge : mEdges){
@@ -180,11 +185,11 @@ public class Graph {
 
     public synchronized void dfs() throws InterruptedException {
         Node node = mNodes.getLast();
+
         Stack<Node> stack = new Stack<>();
-        node.setVisited(true);
         stack.push(node);
-        listener.redraw();
-        Thread.sleep(700);
+
+        makeNodeVisited(node);
 
         boolean found;
         while (!stack.empty()) {
@@ -193,19 +198,16 @@ public class Graph {
 
             for (Edge edge : getEdgesFromNode(currentNode)) {
                 if (!edge.getDestination().wasVisited()) {
-                    edge.setActive(true);
-                    listener.redraw();
-                    Thread.sleep(200);
-                    edge.getDestination().setVisited(true);
-                    stack.push(edge.getDestination());
+                    makeEdgeActive(edge, true);
+
+                    Node destination = edge.getDestination();
+                    stack.push(destination);
+                    makeNodeVisited(destination);
+
                     found = true;
-                    listener.redraw();
-                    Thread.sleep(700);
                     break;
                 }
-                edge.setActive(false);
-                listener.redraw();
-                Thread.sleep(200);
+                makeEdgeActive(edge, false);
             }
 
             if (!found) {
@@ -215,27 +217,23 @@ public class Graph {
     }
 
     public synchronized void bfs() throws InterruptedException {
-        Queue<Node> queue = new LinkedList<Node>();
+        Queue<Node> queue = new LinkedList<>();
         Node node = mNodes.getLast();
-        node.setVisited(true);
-        listener.redraw();
-        Thread.sleep(700);
+
+        makeNodeVisited(node);
 
         queue.add(node);
         while (queue.peek() != null) {
             for (Edge edge : getEdgesFromNode(queue.remove())) {
                 if (!edge.getDestination().wasVisited()) {
-                    edge.setActive(true);
-                    listener.redraw();
-                    Thread.sleep(200);
-                    edge.getDestination().setVisited(true);
+                    makeEdgeActive(edge, true);
+
+                    Node destination = edge.getDestination();
                     queue.add(edge.getDestination());
-                    listener.redraw();
-                    Thread.sleep(700);
+
+                    makeNodeVisited(destination);
                 }
-                edge.setActive(false);
-                listener.redraw();
-                Thread.sleep(200);
+                makeEdgeActive(edge, false);
             }
         }
     }
@@ -250,23 +248,17 @@ public class Graph {
         }
 
         origin.setDistance(0);
-        origin.setVisited(true);
-        listener.redraw();
-        Thread.sleep(700);
+        makeNodeVisited(origin);
 
         while (!notVisited.isEmpty()) {
             Collections.sort(notVisited);
             Node node = notVisited.getFirst();
-            node.setVisited(true);
-            listener.redraw();
-            Thread.sleep(700);
+            makeNodeVisited(node);
+
             notVisited.removeFirst();
 
-
             for (Edge edge : getEdgesFromNode(node)) {
-                edge.setActive(true);
-                listener.redraw();
-                Thread.sleep(200);
+                makeEdgeActive(edge, true);
                 Node destination = edge.getDestination();
                 int weight = edge.getWeight();
 
@@ -277,10 +269,7 @@ public class Graph {
                     listener.connectNodes();
                     Thread.sleep(700);
                 }
-                edge.setIdle(true);
-                edge.setActive(false);
-                listener.redraw();
-                Thread.sleep(200);
+                makeEdgeIdle(edge, true);
             }
         }
     }
@@ -289,18 +278,17 @@ public class Graph {
         boolean relax = true;
         Node origin = mNodes.getLast();
         origin.setDistance(0);
+        makeNodeVisited(origin);
 
         while(relax) {
             relax = false;
             for (Edge edge : mEdges) {
+                makeEdgeActive(edge, true);
+                Node destination = edge.getDestination();
+                Node originNode = edge.getOrigin();
 
-                edge.setActive(true);
-                listener.redraw();
-                Thread.sleep(200);
-                if (edge.getOrigin().getDistance() + edge.getWeight() < edge.getDestination().getDistance()) {
-                    Node destination = edge.getDestination();
-                    Node originNode = edge.getOrigin();
-                    destination.setActive(true);
+                if (originNode.getDistance() + edge.getWeight() < destination.getDistance()) {
+                    makeNodeVisited(destination);
                     destination.setDistance(originNode.getDistance() + edge.getWeight());
                     destination.setParent(originNode);
                     listener.connectNodes();
@@ -308,14 +296,132 @@ public class Graph {
                     relax = true;
                 }
 
-                edge.setIdle(true);
-                edge.setActive(false);
-                listener.redraw();
-                Thread.sleep(200);
+                makeEdgeIdle(edge, true);
             }
         }
 
     }
+
+
+    public synchronized void prim() throws InterruptedException {
+        Node origin = mNodes.getLast();
+        makeNodeVisited(origin);
+        LinkedList<Edge> queue = new LinkedList<>();
+
+        for (Edge edge : getEdgesFromNode(origin)){
+            queue.add(edge);
+        }
+
+        while (!queue.isEmpty()){
+            Edge edge = queue.pop();
+            makeEdgeActive(edge, true);
+
+            if (!edge.getDestination().wasVisited()) {
+                Node node = edge.getDestination();
+                makeNodeVisited(node);
+
+                for (Edge current : getEdgesFromNode(node)){
+                    queue.push(current);
+                    Collections.sort(queue);
+                }
+
+                makeEdgeActive(edge, false);
+            } else {
+                makeEdgeIdle(edge, true);
+            }
+
+        }
+    }
+
+    public synchronized void kruskal() throws InterruptedException{
+        LinkedList<Edge> queue = new LinkedList<>();
+
+        for (Edge edge : mEdges){
+            queue.add(edge);
+        }
+        Collections.sort(queue);
+
+        int currentGroup = 0;
+        int groups = mNodes.size();
+        while (groups != 1 && !queue.isEmpty()) {
+            Edge currentEdge = queue.pop();
+            makeEdgeActive(currentEdge, true);
+
+            Node origin = currentEdge.getOrigin();
+            Node destination = currentEdge.getDestination();
+            makeNodeVisited(origin);
+            makeNodeVisited(destination);
+
+            int originSet = origin.getSet();
+            int destinationSet = destination.getSet();
+
+            if ((originSet == -1 && destinationSet == -1) || originSet != destinationSet) {
+                groups--;
+                for (Node node : mNodes){
+                    if (node.getSet() != -1 && (node.getSet() == originSet || node.getSet() == destinationSet)){
+                        node.setSet(currentGroup);
+                    }
+                }
+                origin.setSet(currentGroup);
+                destination.setSet(currentGroup++);
+
+                makeEdgeActive(currentEdge, false);
+            } else {
+                makeEdgeIdle(currentEdge, true);
+            }
+
+        }
+
+        for (Edge edge : queue){
+            makeEdgeIdle(edge, true);
+        }
+
+    }
+
+    // REQUIRES: Is not called on UI thread.
+    // MODIFIES: node.
+    // EFFECTS:  Sets node to active, redraws, and waits.
+    private synchronized void makeNodeActive(Node node, boolean isActive) throws InterruptedException {
+        node.setActive(isActive);
+        listener.redraw();
+        Thread.sleep(NODE_ACTIVE_ANIMATION_TIME);
+    }
+
+
+    // REQUIRES: Is not called on UI thread.
+    // MODIFIES: node
+    // EFFECTS:  Sets node to visited, redraws and waits.
+    private synchronized void makeNodeVisited(Node node) throws InterruptedException {
+        node.setVisited(true);
+        listener.redraw();
+        Thread.sleep(NODE_VISITED_ANIMATION_TIME);
+    }
+
+    // REQUIRES: Is not called on UI thread.
+    // MODIFIES: edge
+    // EFFECTS:  Makes edge.isActive to isActive, redraws and waits.
+    private synchronized void makeEdgeActive(Edge edge, boolean isActive) throws InterruptedException {
+        if (edge.isIdle()){
+            edge.setIdle(false);
+        }
+        edge.setActive(isActive);
+        listener.redraw();
+        Thread.sleep(EDGE_ACTIVE_ANIMATION_TIME);
+    }
+
+    // REQUIRES: Is not called on UI thread.
+    // MODIFIES: edge
+    // EFFECTS: If making edge idle, makes edge inactive and idle and redraws and wait. Else make edge not
+    // idle and redraw and wait.
+    private synchronized void makeEdgeIdle(Edge edge, boolean isIdle) throws InterruptedException {
+        if (isIdle){
+            edge.setActive(false);
+        }
+        edge.setIdle(isIdle);
+        listener.redraw();
+        Thread.sleep(EDGE_IDLE_ANIMATION_TIME);
+    }
+
 
     public interface OnGraphUpdateListener {
         void redraw();
