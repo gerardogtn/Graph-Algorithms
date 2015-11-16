@@ -31,21 +31,26 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     public static final int EDGE_TEXT_COLOR = 0xFFFF4081;
 
     private int mIndex = 0;
+
     private boolean mWasMoved = false;
     private boolean mIsDialogActive = false;
     private boolean mShowConnections = false;
 
     private Paint mBackgroundPaint;
 
-    private Paint mNodePaint;
-    private Paint mNodeVisitedPaint;
-    private Paint mNodeTextPaint;
+    private Paint mNodePaint = new Paint();
+    private Paint mNodeActivePaint = new Paint();
+    private Paint mNodeVisitedPaint = new Paint();
+    private Paint mNodeTextPaint = new Paint();
 
-    private Paint mEdgePaint;
-    private Paint mEdgeActivePaint;
-    private Paint mEdgeIdlePaint;
-    private Paint mEdgeTextPaint;
-    private Paint mEdgeIdleTextPaint;
+    private Paint mEdgePaint = new Paint();
+    private Paint mEdgeActivePaint = new Paint();
+    private Paint mEdgeIdlePaint = new Paint();
+    private Paint mEdgeTextPaint = new Paint();
+    private Paint mEdgeIdleTextPaint = new Paint();
+
+    private Paint mConnectionPaint = new Paint();
+    private Paint mTextConnectionPaint = new Paint();
 
     private Graph mGraph;
     private Node mCurrentNode;
@@ -56,8 +61,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
 
-    private Paint mConnectionPaint;
-    private Paint mTextConnectionPaint;
 
     public GraphView(Context context) {
         this(context, null);
@@ -73,6 +76,71 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         loadGraph();
     }
 
+    private void setUpPaints() {
+        setUpBackgroundPaint();
+        setUpNodePaints();
+        setUpEdgePaint();
+        setUpConnectionPaint();
+    }
+
+    private void setUpBackgroundPaint() {
+        mBackgroundPaint = new Paint();
+        mBackgroundPaint.setColor(BACKGROUND_COLOR);
+    }
+
+    // TODO: Verify that colors are material design approved.
+    private void setUpNodePaints() {
+        setUpAbstractNodePaint(mNodePaint, Node.COLOR);
+        setUpAbstractNodePaint(mNodeVisitedPaint, Node.COLOR_VISITED);
+        setUpAbstractNodePaint(mNodeActivePaint, Node.COLOR_ACTIVE);
+        setUpAbstractTextPaint(mNodeTextPaint, NODE_TEXT_COLOR);
+    }
+
+    private void setUpAbstractNodePaint(Paint paint, int color){
+        paint.setColor(color);
+        paint.setAntiAlias(true);
+    }
+
+    private void setUpAbstractTextPaint(Paint paint, int color){
+        paint.setColor(color);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setTextSize(24);
+        paint.setAntiAlias(true);
+    }
+
+    private void setUpEdgePaint() {
+        setUpAbstractEdgePaint(mEdgePaint, Color.BLACK);
+        setUpAbstractEdgePaint(mEdgeActivePaint, Color.RED);
+        setUpAbstractEdgePaint(mEdgeIdlePaint, Color.GRAY);
+        setUpAbstractTextPaint(mEdgeTextPaint, EDGE_TEXT_COLOR);
+        setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.GRAY);
+    }
+
+    private void setUpAbstractEdgePaint(Paint paint, int color){
+        paint.setColor(color);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(5);
+        paint.setAntiAlias(true);
+    }
+
+    // TODO: Change green color.
+    private void setUpConnectionPaint() {
+        setUpAbstractEdgePaint(mConnectionPaint, Color.GREEN);
+        setUpAbstractTextPaint(mTextConnectionPaint, Color.GREEN);
+    }
+
+    public void loadGraph() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mGraph.addNodesReverse(mDbHandler.getNodes());
+                mGraph.addEdges(mDbHandler.getEdges());
+            }
+        });
+        thread.start();
+        redraw();
+    }
+
     public void saveGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -86,16 +154,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         thread.start();
     }
 
-    public void loadGraph() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mGraph.addNodesReverse(mDbHandler.getNodes());
-                mGraph.addEdges(mDbHandler.getEdges());
-            }
-        });
-        thread.start();
-        redraw();
+    public void setEventListener(ShowDialogListener edgeListener) {
+        this.insertListener = edgeListener;
     }
 
     @Override
@@ -116,6 +176,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         while (iterator.hasNext()) {
             Node node = iterator.next();
             Paint paint = (node.wasVisited() ? mNodeVisitedPaint : mNodePaint);
+            paint = (node.isActive() ? mNodeActivePaint : paint);
 
             canvas.drawCircle(node.getX(),
                     node.getY(),
@@ -125,6 +186,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mNodeTextPaint);
         }
     }
+
 
     // REQUIRES: None.
     // MODIFIES: None.
@@ -146,7 +208,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
         }
     }
-
 
     // REQUIRES: None.
     // MODIFIES: canvas.
@@ -179,7 +240,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         float xMid = (x0 + x1) /2;
         float yMid = (y0 + y1) /2;
 
-        canvas.drawText(text, xMid + yLen* offset/length, yMid - xLen*offset/length, paint);
+        canvas.drawText(text, xMid + yLen * offset / length, yMid - xLen * offset / length, paint);
     }
 
     @Override
@@ -213,109 +274,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this.
     // EFFECTS: Adds node to mNodes and redraw.
     public void addNode(final Node node) {
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mDbHandler.writeNode(node);
-            }
-        });
-        thread.start();
-
         mGraph.addNode(node);
         mCurrentNode = null;
         invalidate();
-    }
-
-    public void setEventListener(ShowDialogListener edgeListener) {
-        this.insertListener = edgeListener;
-    }
-
-    private void setUpPaints() {
-        setUpNodePaint();
-        setUpEdgePaint();
-        setUpBackgroundPaint();
-        setUpTextPaint();
-        setUpConnectionPaint();
-        setUpConnectionTextPaint();
-    }
-
-    private void setUpConnectionTextPaint() {
-        mTextConnectionPaint = new Paint();
-        mTextConnectionPaint.setColor(Color.GREEN);
-        mTextConnectionPaint.setStyle(Paint.Style.FILL);
-        mTextConnectionPaint.setTextSize(24);
-        mTextConnectionPaint.setAntiAlias(true);
-    }
-
-    private void setUpConnectionPaint() {
-        mConnectionPaint = new Paint();
-        mConnectionPaint.setColor(Color.GREEN);
-        mConnectionPaint.setStyle(Paint.Style.STROKE);
-        mConnectionPaint.setStrokeWidth(5);
-        mConnectionPaint.setAntiAlias(true);
-    }
-
-    private void setUpTextPaint() {
-        setUpNodeTextPaint();
-        setUpEdgeTextPaint();
-    }
-
-    private void setUpNodeTextPaint() {
-        mNodeTextPaint = new Paint();
-        mNodeTextPaint.setColor(NODE_TEXT_COLOR);
-        mNodeTextPaint.setStyle(Paint.Style.FILL);
-        mNodeTextPaint.setTextSize(24);
-        mNodeTextPaint.setAntiAlias(true);
-    }
-
-    private void setUpEdgeTextPaint() {
-        mEdgeTextPaint = new Paint();
-        mEdgeTextPaint.setColor(EDGE_TEXT_COLOR);
-        mEdgeTextPaint.setStyle(Paint.Style.FILL);
-        mEdgeTextPaint.setTextSize(24);
-        mEdgeTextPaint.setAntiAlias(true);
-    }
-
-    private void setUpBackgroundPaint() {
-        mBackgroundPaint = new Paint();
-        mBackgroundPaint.setColor(BACKGROUND_COLOR);
-    }
-
-    // TODO: Refactor.
-    private void setUpEdgePaint() {
-        mEdgePaint = new Paint();
-        mEdgePaint.setColor(Color.BLACK);
-        mEdgePaint.setStyle(Paint.Style.STROKE);
-        mEdgePaint.setStrokeWidth(5);
-        mEdgePaint.setAntiAlias(true);
-
-        mEdgeActivePaint = new Paint();
-        mEdgeActivePaint.setColor(Color.RED);
-        mEdgeActivePaint.setStyle(Paint.Style.STROKE);
-        mEdgeActivePaint.setStrokeWidth(5);
-        mEdgeActivePaint.setAntiAlias(true);
-
-        mEdgeIdlePaint = new Paint();
-        mEdgeIdlePaint.setColor(Color.GRAY);
-        mEdgeActivePaint.setStyle(Paint.Style.STROKE);
-        mEdgeActivePaint.setStrokeWidth(5);
-        mEdgeActivePaint.setAntiAlias(true);
-
-        mEdgeIdleTextPaint = new Paint();
-        mEdgeIdleTextPaint.setColor(Color.GRAY);
-        mEdgeIdleTextPaint.setStyle(Paint.Style.FILL);
-        mEdgeIdleTextPaint.setTextSize(24);
-        mEdgeIdleTextPaint.setAntiAlias(true);
-    }
-
-    private void setUpNodePaint() {
-        mNodePaint = new Paint();
-        mNodePaint.setColor(Node.COLOR);
-        mNodePaint.setAntiAlias(true);
-        mNodeVisitedPaint = new Paint();
-        mNodeVisitedPaint.setColor(Node.COLOR_VISITED);
-        mNodeVisitedPaint.setAntiAlias(true);
     }
 
 
@@ -403,9 +364,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             } else if (mIndex == 2) {
                 mGraph.bfs();
             } else if (mIndex == 3) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+                mGraph.prim();
             } else if (mIndex == 4) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+                mGraph.kruskal();
             } else if (mIndex == 5) {
                 mGraph.dijkstra();
             } else if (mIndex == 6) {
