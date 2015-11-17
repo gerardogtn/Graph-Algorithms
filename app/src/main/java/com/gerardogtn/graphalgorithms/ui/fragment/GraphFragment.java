@@ -13,7 +13,9 @@ import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddEdgeDialog;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddNodeDialog;
+import com.gerardogtn.graphalgorithms.ui.dialog.FloydWarshallDialog;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,6 +25,8 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
 
     public static final String TAG_NODE_DIALOG = "NodeDialog";
     public static final String TAG_EDGE_DIALOG = "EdgeDialog";
+
+    public static final String TAG_FLOYD_WARSHALL_DIALOG = "Floyd Warshall Dialog";
 
     private GraphView graphView;
 
@@ -80,7 +84,17 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
     }
 
     public void executeAlgorithm(int index) {
-        graphView.executeAlgorithm(index);
+        if (index == 7){
+            showFloydWarshallDialog();
+        } else {
+            graphView.executeAlgorithm(index);
+        }
+    }
+
+    public void showFloydWarshallDialog(){
+        FragmentManager manager = getFragmentManager();
+        FloydWarshallDialog dialog = new FloydWarshallDialog();
+        dialog.show(manager, TAG_FLOYD_WARSHALL_DIALOG);
     }
 
     public void resetGraph(){
@@ -96,4 +110,5 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
     public void setOnStopListener(){
         graphView.setOnStopListener((MainActivity) getActivity());
     }
+
 }

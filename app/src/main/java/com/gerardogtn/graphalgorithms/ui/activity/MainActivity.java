@@ -13,6 +13,7 @@ import android.widget.Spinner;
 
 import com.gerardogtn.graphalgorithms.R;
 import com.gerardogtn.graphalgorithms.data.model.Node;
+import com.gerardogtn.graphalgorithms.ui.dialog.FloydWarshallDialog;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 
@@ -101,11 +102,20 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     void animateAlgorithm(){
         mFab.hide();
         isAlgorithmActive = true;
-        mFragment.executeAlgorithm(mSpinner.getSelectedItemPosition());
+        int selectedAlgorithm = mSpinner.getSelectedItemPosition();
+
+        if (selectedAlgorithm == 3 || selectedAlgorithm == 4){
+            Snackbar.make(mFab,
+                        "This algorithm assumes that the graph is undirected",
+                        Snackbar.LENGTH_SHORT)
+                    .show();
+        }
+        mFragment.executeAlgorithm(selectedAlgorithm);
     }
 
     @Override
     public void stopAnimation() {
         this.isAlgorithmActive = false;
     }
+
 }
