@@ -1,6 +1,8 @@
 package com.gerardogtn.graphalgorithms.ui.dialog;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -18,6 +20,7 @@ import com.gerardogtn.graphalgorithms.R;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.ui.adapter.FloydWarshallAdapter;
+import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 
 /**
  * Created by gerardogtn on 11/7/15.
@@ -25,17 +28,19 @@ import com.gerardogtn.graphalgorithms.ui.adapter.FloydWarshallAdapter;
 public class FloydWarshallDialog extends DialogFragment implements View.OnClickListener {
 
     public static final String KEY_STEP_ACTIVE = "step_active";
-
-    private RecyclerView mRecyclerView;
-    private FloydWarshallAdapter mAdapter;
-    private Thread mAnimationThread;
+    private static final int ANIMATION_TIME = 800;
 
     private boolean mIsActive = false;
     private boolean mIsFinished = false;
     private boolean mStepAnimation = true;
     private boolean mNextStep = false;
 
-    private static final int ANIMATION_TIME = 800;
+    private RecyclerView mRecyclerView;
+    private FloydWarshallAdapter mAdapter;
+
+    private Thread mAnimationThread;
+
+    private GraphView.OnStopAnimationListener mOnStopListener;
 
     public FloydWarshallDialog(){
         mAnimationThread = new Thread(new FloydWarshallTask());
@@ -47,6 +52,20 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
         FloydWarshallDialog fragment = new FloydWarshallDialog();
         fragment.setArguments(args);
         return fragment;
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        try{
+            mOnStopListener = (GraphView.OnStopAnimationListener) context;
+        } catch (ClassCastException e){
+            throw new ClassCastException(context.toString() +
+                    " must implement OnStopAnimationListener in" +
+                    ((Activity) context).getClass().getSimpleName());
+        }
     }
 
     @Override
@@ -88,6 +107,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
                     @Override
                     public void onClick(View view) {
                         if (!mIsActive) {
+                            mOnStopListener.stopAnimation();
                             dialog.dismiss();
                         } else {
                             Snackbar.make(mRecyclerView, R.string.cant_dismiss_while_active, Snackbar.LENGTH_SHORT)
@@ -137,7 +157,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
 
     // REQUIRES: Is not run on main thread.
     // MODIFIES: mAdapter.
-    // EFFECTS:  executes floyd warshall and redraws.
+    // EFFECTS:  Executes floyd warshall and redraws.
     public  void floydWarshall() throws InterruptedException {
         int size = Graph.getNodesSize();
         int[][] adjMatrix = new int[size][size];
