@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
@@ -75,6 +76,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
     }
 
     // TODO: Refactor.
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         MainActivity activity = (MainActivity) getActivity();
@@ -107,7 +109,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
                     @Override
                     public void onClick(View view) {
                         if (!mIsActive) {
-                            mOnStopListener.stopAnimation();
+                            mOnStopListener.stopAnimation(false);
                             dialog.dismiss();
                         } else {
                             Snackbar.make(mRecyclerView, R.string.cant_dismiss_while_active, Snackbar.LENGTH_SHORT)
@@ -119,12 +121,17 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
                 if (mStepAnimation) {
                     Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
                     neutralButton.setOnClickListener(FloydWarshallDialog.this);
-
                 }
             }
         });
 
         return dialog;
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        mOnStopListener.stopAnimation(false);
     }
 
     private void setUpBuilder(AlertDialog.Builder builder) {
@@ -150,7 +157,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
 
     public void setUpDialogWindow(AlertDialog dialog) {
         DisplayMetrics metrics = getActivity().getResources().getDisplayMetrics();
-        int height = (int) ((32 + 65 * (Graph.getNodesSize() + 1)) * metrics.density);
+        int height = (int) ((162 + 45 * (Graph.getNodesSize() + 1)) * metrics.density);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height);
     }
 

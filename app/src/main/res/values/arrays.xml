@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="modes_array">
-        <item>All</item>
         <item>Depth First Search</item>
         <item>Breadth First Search</item>
         <item>Prim</item>

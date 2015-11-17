@@ -112,6 +112,10 @@ public class Graph {
         return mNodes.size();
     }
 
+    public static int getEdgesSize(){
+        return mEdges.size();
+    }
+
     // REQUIRES: PointF is valid.
     // MODIFIES: None.
     // EFFECTS: Returns the first node found that encompasses PointF. Returns null if not found.

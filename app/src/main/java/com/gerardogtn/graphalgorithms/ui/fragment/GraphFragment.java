@@ -87,7 +87,7 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
     }
 
     public void executeAlgorithm(int index, boolean isStepActive) {
-        if (index == 7){
+        if (index == 6){
             showFloydWarshallDialog(isStepActive);
         } else {
             graphView.executeAlgorithm(index);

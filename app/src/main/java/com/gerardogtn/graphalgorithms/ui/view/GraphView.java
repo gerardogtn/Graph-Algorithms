@@ -1,6 +1,7 @@
 package com.gerardogtn.graphalgorithms.ui.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,6 +17,8 @@ import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.Iterator;
 
 
@@ -61,6 +64,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
 
+    private Bitmap bitmap;
+
 
     public GraphView(Context context) {
         this(context, null);
@@ -74,6 +79,24 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mDbHandler = new GraphDbHandler(mContext);
         setUpPaints();
         loadGraph();
+        setUpBitmap();
+    }
+
+    private void setUpBitmap() {
+        setDrawingCacheEnabled(true);
+        bitmap = getDrawingCache();
+    }
+
+    private FileOutputStream saveBitmap(){
+
+        FileOutputStream output = null;
+        try {
+            output = new FileOutputStream("graph.jpg");
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return output;
     }
 
     private void setUpPaints() {
@@ -96,12 +119,12 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractTextPaint(mNodeTextPaint, NODE_TEXT_COLOR);
     }
 
-    private void setUpAbstractNodePaint(Paint paint, int color){
+    private void setUpAbstractNodePaint(Paint paint, int color) {
         paint.setColor(color);
         paint.setAntiAlias(true);
     }
 
-    private void setUpAbstractTextPaint(Paint paint, int color){
+    private void setUpAbstractTextPaint(Paint paint, int color) {
         paint.setColor(color);
         paint.setStyle(Paint.Style.FILL);
         paint.setTextSize(24);
@@ -116,7 +139,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.GRAY);
     }
 
-    private void setUpAbstractEdgePaint(Paint paint, int color){
+    private void setUpAbstractEdgePaint(Paint paint, int color) {
         paint.setColor(color);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
@@ -231,14 +254,14 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // EFFECTS : Draws text on perpendicular to line with offset.
     private void drawTextOnLine(Canvas canvas, String text, Paint paint,
                                 float x0, float x1,
-                                float y0, float y1){
+                                float y0, float y1) {
 
         int offset = 30;
         float length = (float) Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
         float xLen = x0 - x1;
         float yLen = y0 - y1;
-        float xMid = (x0 + x1) /2;
-        float yMid = (y0 + y1) /2;
+        float xMid = (x0 + x1) / 2;
+        float yMid = (y0 + y1) / 2;
 
         canvas.drawText(text, xMid + yLen * offset / length, yMid - xLen * offset / length, paint);
     }
@@ -352,35 +375,43 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     // REQUIRES: None.
     // MODIFIES: None.
-    // EFFECTS:  Executes algorithm if  0 <= mIndex <= 7, else throws IllegalArgumentException.
+    // EFFECTS:  Executes appropiate algorithm if  0 <= mIndex <= 5, else if mIndex =  6 throws
+    // IllegalArgumentException, else trows IndexOutOfBoundsException.
     @Override
     public void run() {
 
+        int index = mIndex + 1;
+
         try {
-            if (mIndex == 0) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
-            } else if (mIndex == 1) {
+            if (index == 1) {
                 mGraph.dfs();
-            } else if (mIndex == 2) {
+            } else if (index == 2) {
                 mGraph.bfs();
-            } else if (mIndex == 3) {
+            } else if (index == 3) {
                 mGraph.prim();
-            } else if (mIndex == 4) {
+            } else if (index == 4) {
                 mGraph.kruskal();
-            } else if (mIndex == 5) {
+            } else if (index == 5) {
                 mGraph.dijkstra();
-            } else if (mIndex == 6) {
+            } else if (index == 6) {
                 mGraph.bellmanFord();
-            } else if (mIndex == 7) {
-                Log.d(TAG, "Opcion: " + mIndex + " no implementada");
+            } else if (index == 7) {
+                throw new IllegalArgumentException("Floyd Warshall is not implemented in GraphView");
             } else {
-                throw new IllegalArgumentException();
+                throw new IndexOutOfBoundsException();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             e.printStackTrace();
         }
-        mStopListener.stopAnimation();
+
+        post(new Runnable() {
+            @Override
+            public void run() {
+                mStopListener.stopAnimation(true);
+            }
+        });
+
     }
 
     public void resetGraph() {
@@ -408,8 +439,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         void showNodeDialog();
     }
 
-    public interface OnStopAnimationListener{
-        void stopAnimation();
+    public interface OnStopAnimationListener {
+        void stopAnimation(boolean showClearButton);
     }
 
 }

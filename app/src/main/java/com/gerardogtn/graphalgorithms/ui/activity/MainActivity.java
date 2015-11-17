@@ -1,5 +1,6 @@
 package com.gerardogtn.graphalgorithms.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 import com.gerardogtn.graphalgorithms.R;
+import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
 
     private boolean isAlgorithmActive = false;
     private boolean mIsStepActive = false;
+    private boolean needsToBeCleared = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,13 +81,6 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
 
         if (id == R.id.action_settings) {
             return true;
-        } else if (id == R.id.action_done){
-            if (isAlgorithmActive){
-                Snackbar.make(mFab, "Can't clear, an algorithm is being animated", Snackbar.LENGTH_SHORT).show();
-            } else {
-                mFragment.resetGraph();
-                mFab.show();
-            }
         } else if (id == R.id.action_speed){
             if (mIsStepActive){
                 mIsStepActive = false;
@@ -98,34 +94,62 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         } else if (id == R.id.action_clear){
             mFragment.clearGraph();
             mFab.show();
+        } else if (id == R.id.action_share){
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("image/jpeg");
+
+//            ContentValues values = new ContentValues();
+//            values.put(MediaStore.Images.Media.)
+//            Uri uri = getContentResolver().
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     @OnClick(R.id.fab)
-    void addNode(){
-        mFragment.addNode(new Node(0));
+    void fabClick(){
+        if (!needsToBeCleared) {
+            mFragment.addNode(new Node(0));
+        } else {
+            mFragment.resetGraph();
+            mFab.setImageResource(R.drawable.ic_add_white_24dp);
+            needsToBeCleared = false;
+        }
     }
 
     @OnClick(R.id.img_go)
     void animateAlgorithm(){
-        mFab.hide();
-        isAlgorithmActive = true;
-        int selectedAlgorithm = mSpinner.getSelectedItemPosition();
 
-        if (selectedAlgorithm == 3 || selectedAlgorithm == 4){
-            Snackbar.make(mFab,
+        if (Graph.getEdgesSize() >= 1){
+            mFab.hide();
+            isAlgorithmActive = true;
+            int selectedAlgorithm = mSpinner.getSelectedItemPosition();
+
+            if (selectedAlgorithm == 2 || selectedAlgorithm == 3){
+                Snackbar.make(mFab,
                         "This algorithm assumes that the graph is undirected",
                         Snackbar.LENGTH_SHORT)
-                    .show();
+                        .show();
+            }
+            mFragment.executeAlgorithm(selectedAlgorithm, mIsStepActive);
+        } else {
+            Snackbar.make(mFab, R.string.one_edge, Snackbar.LENGTH_SHORT).show();
         }
-        mFragment.executeAlgorithm(selectedAlgorithm, mIsStepActive);
+
     }
 
     @Override
-    public void stopAnimation() {
+    public void stopAnimation(boolean showClearButton) {
         this.isAlgorithmActive = false;
+        mFab.show();
+
+        if (showClearButton){
+            mFab.setImageResource(R.drawable.ic_action_done);
+        } else {
+            mFab.setImageResource(R.drawable.ic_add_white_24dp);
+        }
+
+        this.needsToBeCleared = showClearButton;
     }
 
 }
