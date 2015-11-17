@@ -22,7 +22,9 @@ import com.gerardogtn.graphalgorithms.ui.adapter.FloydWarshallAdapter;
 /**
  * Created by gerardogtn on 11/7/15.
  */
-public class FloydWarshallDialog extends DialogFragment {
+public class FloydWarshallDialog extends DialogFragment implements View.OnClickListener {
+
+    public static final String KEY_STEP_ACTIVE = "step_active";
 
     private RecyclerView mRecyclerView;
     private FloydWarshallAdapter mAdapter;
@@ -30,6 +32,8 @@ public class FloydWarshallDialog extends DialogFragment {
 
     private boolean mIsActive = false;
     private boolean mIsFinished = false;
+    private boolean mStepAnimation = true;
+    private boolean mNextStep = false;
 
     private static final int ANIMATION_TIME = 800;
 
@@ -37,6 +41,19 @@ public class FloydWarshallDialog extends DialogFragment {
         mAnimationThread = new Thread(new FloydWarshallTask());
     }
 
+    public static FloydWarshallDialog newInstance(boolean isStepActive) {
+        Bundle args = new Bundle();
+        args.putBoolean(KEY_STEP_ACTIVE, isStepActive);
+        FloydWarshallDialog fragment = new FloydWarshallDialog();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.mStepAnimation = getArguments().getBoolean(KEY_STEP_ACTIVE);
+    }
 
     // TODO: Refactor.
     @Override
@@ -60,7 +77,7 @@ public class FloydWarshallDialog extends DialogFragment {
                 buttonPositive.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (!mIsFinished && !mIsActive){
+                        if (!mIsFinished && !mIsActive) {
                             mIsActive = true;
                             mAnimationThread.start();
                         }
@@ -70,7 +87,7 @@ public class FloydWarshallDialog extends DialogFragment {
                 buttonNegative.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (!mIsActive){
+                        if (!mIsActive) {
                             dialog.dismiss();
                         } else {
                             Snackbar.make(mRecyclerView, R.string.cant_dismiss_while_active, Snackbar.LENGTH_SHORT)
@@ -78,6 +95,12 @@ public class FloydWarshallDialog extends DialogFragment {
                         }
                     }
                 });
+
+                if (mStepAnimation) {
+                    Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+                    neutralButton.setOnClickListener(FloydWarshallDialog.this);
+
+                }
             }
         });
 
@@ -89,6 +112,9 @@ public class FloydWarshallDialog extends DialogFragment {
         builder.setView(mRecyclerView);
         builder.setPositiveButton(R.string.start, null);
         builder.setNegativeButton(android.R.string.cancel, null);
+        if (mStepAnimation){
+            builder.setNeutralButton(R.string.next, null);
+        }
     }
 
     private void setUpRecyclerView(MainActivity activity) {
@@ -112,7 +138,7 @@ public class FloydWarshallDialog extends DialogFragment {
     // REQUIRES: Is not run on main thread.
     // MODIFIES: mAdapter.
     // EFFECTS:  executes floyd warshall and redraws.
-    public void floydWarshall() throws InterruptedException {
+    public  void floydWarshall() throws InterruptedException {
         int size = Graph.getNodesSize();
         int[][] adjMatrix = new int[size][size];
 
@@ -123,25 +149,58 @@ public class FloydWarshallDialog extends DialogFragment {
         }
 
         for (int i = 0; i < size; i++){
-            mAdapter.makeRowActive(i, true);
-            mAdapter.makeColumnActive(i, true);
-            Thread.sleep(ANIMATION_TIME);
+            makeRowColumnActive(i, true);
+
             for (int j = 0; j < size; j++){
                 for (int k = 0; k < size; k++){
                     int newValue = adjMatrix[j][k];
                     if (newValue > adjMatrix[j][i] + adjMatrix[i][k]){
                         newValue = adjMatrix[j][i] + adjMatrix[i][k];
-                        mAdapter.makeModified(k, j, true);
-                        mAdapter.updateElement(k, j, newValue);
-                        Thread.sleep(ANIMATION_TIME);
-                        mAdapter.makeModified(k, j, false);
+                        updateValueAtPosition(j, k, newValue);
+                        handleStepper();
+                        mAdapter.makeModified(j, k, false);
                         Thread.sleep(ANIMATION_TIME);
                     }
                 }
             }
-            mAdapter.makeRowActive(i, false);
-            mAdapter.makeColumnActive(i, false);
-            Thread.sleep(ANIMATION_TIME);
+
+            makeRowColumnActive(i, false);
+        }
+    }
+
+    private void makeRowColumnActive(int i, boolean isActive) throws InterruptedException {
+        mAdapter.makeRowActive(i, isActive);
+        mAdapter.makeColumnActive(i, isActive);
+        Thread.sleep(ANIMATION_TIME);
+    }
+
+    private void handleStepper() throws InterruptedException {
+        if (mStepAnimation) {
+            mNextStep = true;
+            synchronized (this) {
+                while (mNextStep) {
+                    wait();
+                }
+            }
+        }
+    }
+
+    private void updateValueAtPosition(int row, int column, int newValue) throws InterruptedException {
+        mAdapter.makeModified(row, column, true);
+        Thread.sleep(ANIMATION_TIME);
+        mAdapter.updateElement(row, column, newValue);
+        Thread.sleep(ANIMATION_TIME);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (mIsActive){
+            synchronized (FloydWarshallDialog.this) {
+                if (mNextStep){
+                    mNextStep = false;
+                    notify();
+                }
+            }
         }
     }
 

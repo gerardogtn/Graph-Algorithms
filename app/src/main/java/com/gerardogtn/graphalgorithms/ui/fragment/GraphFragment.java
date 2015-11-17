@@ -25,7 +25,6 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
 
     public static final String TAG_NODE_DIALOG = "NodeDialog";
     public static final String TAG_EDGE_DIALOG = "EdgeDialog";
-
     public static final String TAG_FLOYD_WARSHALL_DIALOG = "Floyd Warshall Dialog";
 
     private GraphView graphView;
@@ -36,16 +35,20 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
 
     public static GraphFragment newInstance() {
         Bundle args = new Bundle();
-
         GraphFragment fragment = new GraphFragment();
-        fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View root =  inflater.inflate(R.layout.fragment_graph, container, false);
+
         graphView = (GraphView) root;
         graphView.setEventListener(this);
         setOnStopListener();
@@ -83,17 +86,17 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.addNode(node);
     }
 
-    public void executeAlgorithm(int index) {
+    public void executeAlgorithm(int index, boolean isStepActive) {
         if (index == 7){
-            showFloydWarshallDialog();
+            showFloydWarshallDialog(isStepActive);
         } else {
             graphView.executeAlgorithm(index);
         }
     }
 
-    public void showFloydWarshallDialog(){
+    public void showFloydWarshallDialog(boolean isStepActive){
         FragmentManager manager = getFragmentManager();
-        FloydWarshallDialog dialog = new FloydWarshallDialog();
+        FloydWarshallDialog dialog = FloydWarshallDialog.newInstance(isStepActive);
         dialog.show(manager, TAG_FLOYD_WARSHALL_DIALOG);
     }
 

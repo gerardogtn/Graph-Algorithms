@@ -17,4 +17,5 @@
     <string name="floyd_warshall">Floyd Warshall</string>
     <string name="cant_dismiss_while_active">Cannot dismiss dialog while algorithm is active</string>
     <string name="inf">INF</string>
+    <string name="next">Next</string>
 </resources>

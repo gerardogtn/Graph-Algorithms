@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,7 @@ import com.gerardogtn.graphalgorithms.data.model.FloydWarshallElement;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by gerardogtn on 11/16/15.
@@ -78,7 +75,6 @@ public class FloydWarshallAdapter extends RecyclerView.Adapter<FloydWarshallAdap
                 }
             }
         }
-        Log.d("Adapter", count + "");
         mActivity.runOnUiThread(mTask);
     }
 

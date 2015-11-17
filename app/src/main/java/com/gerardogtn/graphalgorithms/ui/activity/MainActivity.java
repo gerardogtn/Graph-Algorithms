@@ -13,7 +13,6 @@ import android.widget.Spinner;
 
 import com.gerardogtn.graphalgorithms.R;
 import com.gerardogtn.graphalgorithms.data.model.Node;
-import com.gerardogtn.graphalgorithms.ui.dialog.FloydWarshallDialog;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 
@@ -37,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     FloatingActionButton mFab;
 
     private boolean isAlgorithmActive = false;
+    private boolean mIsStepActive = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +85,16 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
                 mFragment.resetGraph();
                 mFab.show();
             }
+        } else if (id == R.id.action_speed){
+            if (mIsStepActive){
+                mIsStepActive = false;
+                item.setIcon(R.drawable.ic_action_fast_forward);
+                Snackbar.make(mFab, "Fast forward mode activated", Snackbar.LENGTH_SHORT).show();
+            } else {
+                mIsStepActive = true;
+                item.setIcon(R.drawable.ic_action_play);
+                Snackbar.make(mFab, "Step by step mode activated", Snackbar.LENGTH_SHORT).show();
+            }
         } else if (id == R.id.action_clear){
             mFragment.clearGraph();
             mFab.show();
@@ -110,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
                         Snackbar.LENGTH_SHORT)
                     .show();
         }
-        mFragment.executeAlgorithm(selectedAlgorithm);
+        mFragment.executeAlgorithm(selectedAlgorithm, mIsStepActive);
     }
 
     @Override
