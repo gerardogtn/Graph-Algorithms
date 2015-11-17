@@ -38,8 +38,6 @@ public class Graph {
     public static final int EDGE_ACTIVE_ANIMATION_TIME = 400;
     public static final int EDGE_IDLE_ANIMATION_TIME = 400;
 
-
-
     private Graph(boolean isDirected) {
         mEdges = new LinkedHashSet<>();
         mNodes = new LinkedList<>();
@@ -89,14 +87,6 @@ public class Graph {
         this.listener = listener;
     }
 
-    public int getNodesSize() {
-        return mNodes.size();
-    }
-
-    public int getEdgesSize() {
-        return mEdges.size();
-    }
-
     public Set<Edge> getEdges() {
         return mEdges;
     }
@@ -105,7 +95,7 @@ public class Graph {
         return mNodes;
     }
 
-    public LinkedList<Edge> getEdgesFromNode(Node node) {
+    public static LinkedList<Edge> getEdgesFromNode(Node node) {
         LinkedList<Edge> output = new LinkedList<>();
 
         for (Edge edge : mEdges) {
@@ -116,6 +106,10 @@ public class Graph {
 
         Collections.sort(output);
         return output;
+    }
+
+    public static int getNodesSize(){
+        return mNodes.size();
     }
 
     // REQUIRES: PointF is valid.
@@ -302,7 +296,6 @@ public class Graph {
 
     }
 
-
     public synchronized void prim() throws InterruptedException {
         Node origin = mNodes.getLast();
         makeNodeVisited(origin);
@@ -378,6 +371,29 @@ public class Graph {
 
     }
 
+    public static int[][] getAdjacencyMatrix(){
+        int size = mNodes.size();
+        int[][] adjacencyMatrix = new int[size][size];
+        int weight = Node.MAX_VALUE;
+        for (Node node : mNodes){
+            for (Node node2 : mNodes){
+                for(Edge edge : getEdgesFromNode(node)){
+                    if(edge.getDestination() == node2){
+                        weight = edge.getWeight();
+                    }
+                }
+                if(node == node2){
+                    weight = 0;
+                }
+                adjacencyMatrix[node.getId()-1][node2.getId()-1] = weight;
+                weight = Node.MAX_VALUE;
+            }
+        }
+        return adjacencyMatrix;
+    }
+
+
+
     // REQUIRES: Is not called on UI thread.
     // MODIFIES: node.
     // EFFECTS:  Sets node to active, redraws, and waits.
@@ -386,7 +402,6 @@ public class Graph {
         listener.redraw();
         Thread.sleep(NODE_ACTIVE_ANIMATION_TIME);
     }
-
 
     // REQUIRES: Is not called on UI thread.
     // MODIFIES: node
@@ -427,7 +442,5 @@ public class Graph {
         void redraw();
         void connectNodes();
     }
-
-
 
 }
