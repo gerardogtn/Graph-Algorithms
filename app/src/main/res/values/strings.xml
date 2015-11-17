@@ -13,4 +13,8 @@
     <string name="clear_algorithm">Clear algorithm</string>
     <string name="share_graph">Share graph</string>
     <string name="default_animation_speed">Default animation speed</string>
+    <string name="start">Start</string>
+    <string name="floyd_warshall">Floyd Warshall</string>
+    <string name="cant_dismiss_while_active">Cannot dismiss dialog while algorithm is active</string>
+    <string name="inf">INF</string>
 </resources>
