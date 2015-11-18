@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.support.design.widget.Snackbar;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -16,9 +17,14 @@ import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
+import com.gerardogtn.graphalgorithms.util.exception.GraphImageFileException;
+import com.gerardogtn.graphalgorithms.util.file.FileConstants;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 
@@ -79,25 +85,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mDbHandler = new GraphDbHandler(mContext);
         setUpPaints();
         loadGraph();
-        setUpBitmap();
     }
 
-    private void setUpBitmap() {
-        setDrawingCacheEnabled(true);
-        bitmap = getDrawingCache();
-    }
-
-    private FileOutputStream saveBitmap(){
-
-        FileOutputStream output = null;
-        try {
-            output = new FileOutputStream("graph.jpg");
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return output;
-    }
 
     private void setUpPaints() {
         setUpBackgroundPaint();
@@ -190,6 +179,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         }
         drawNodes(canvas);
     }
+
+
 
     // REQUIRES: None.
     // MODIFIES: None.
@@ -434,6 +425,39 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         this.mStopListener = onStopListener;
     }
 
+    // REQUIRES: None.
+    // MODIFIES: this.
+    // EFFECTS:  Saves graphview as JPEG, if save was unsuccesful return false, otherwise true.
+    public boolean writeGraphImage() {
+        bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bitmap);
+
+        canvas.drawPaint(mBackgroundPaint);
+        drawEdges(canvas);
+        if (mShowConnections) {
+            drawConnections(canvas);
+        }
+        drawNodes(canvas);
+
+        File file = new File(FileConstants.GRAPH_IMAGE_PATH);
+
+        try {
+            FileOutputStream stream = new FileOutputStream(file);
+            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)){
+                Log.wtf(TAG, "Creo imagen correctamente");
+            } else {
+                Log.wtf(TAG, "No pude crear imagen");
+            }
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Snackbar.make(this, "Couldn't save image", Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
+    }
+
     public interface ShowDialogListener {
         void showEdgeDialog();
         void showNodeDialog();
@@ -443,4 +467,25 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         void stopAnimation(boolean showClearButton);
     }
 
+
+    private static class SaveBitmapTask implements Runnable{
+
+        private static SaveBitmapTask mTask;
+
+        private SaveBitmapTask(){
+
+        }
+
+        public static SaveBitmapTask getInstance() {
+            if (mTask == null){
+                mTask = new SaveBitmapTask();
+            }
+            return mTask;
+        }
+
+        @Override
+        public void run() {
+
+        }
+    }
 }

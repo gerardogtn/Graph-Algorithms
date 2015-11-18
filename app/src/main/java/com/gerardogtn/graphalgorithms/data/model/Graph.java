@@ -3,7 +3,7 @@ package com.gerardogtn.graphalgorithms.data.model;
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
 
-import com.gerardogtn.graphalgorithms.util.NodeIdNotFoundException;
+import com.gerardogtn.graphalgorithms.util.exception.NodeIdNotFoundException;
 
 import java.util.Collections;
 import java.util.Iterator;

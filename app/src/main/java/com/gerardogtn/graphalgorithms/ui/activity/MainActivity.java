@@ -1,6 +1,7 @@
 package com.gerardogtn.graphalgorithms.ui.activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -17,6 +18,9 @@ import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
+import com.gerardogtn.graphalgorithms.util.file.FileConstants;
+
+import java.io.File;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -82,28 +86,36 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_speed){
-            if (mIsStepActive){
-                mIsStepActive = false;
-                item.setIcon(R.drawable.ic_action_fast_forward);
-                Snackbar.make(mFab, "Fast forward mode activated", Snackbar.LENGTH_SHORT).show();
-            } else {
-                mIsStepActive = true;
-                item.setIcon(R.drawable.ic_action_play);
-                Snackbar.make(mFab, "Step by step mode activated", Snackbar.LENGTH_SHORT).show();
-            }
+            changeAnimationMode(item);
         } else if (id == R.id.action_clear){
             mFragment.clearGraph();
             mFab.show();
         } else if (id == R.id.action_share){
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("image/jpeg");
-
-//            ContentValues values = new ContentValues();
-//            values.put(MediaStore.Images.Media.)
-//            Uri uri = getContentResolver().
+            shareGraphImage();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void shareGraphImage() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/jpeg");
+        if (mFragment.writeGraphImage()) {
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GRAPH_IMAGE_PATH)));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_graph)));
+        }
+    }
+
+    private void changeAnimationMode(MenuItem item) {
+        if (mIsStepActive){
+            mIsStepActive = false;
+            item.setIcon(R.drawable.ic_action_fast_forward);
+            Snackbar.make(mFab, "Fast forward mode activated", Snackbar.LENGTH_SHORT).show();
+        } else {
+            mIsStepActive = true;
+            item.setIcon(R.drawable.ic_action_play);
+            Snackbar.make(mFab, "Step by step mode activated", Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     @OnClick(R.id.fab)

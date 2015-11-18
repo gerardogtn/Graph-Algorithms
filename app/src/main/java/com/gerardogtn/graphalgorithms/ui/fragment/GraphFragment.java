@@ -114,4 +114,10 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.setOnStopListener((MainActivity) getActivity());
     }
 
+    // REQUIRES: None.
+    // MODIFIES: None.
+    // EFFECTS: Returns false if there was an error when saving, true otherwise.
+    public boolean writeGraphImage() {
+        return graphView.writeGraphImage();
+    }
 }

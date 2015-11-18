@@ -1,4 +1,4 @@
-package com.gerardogtn.graphalgorithms.util;
+package com.gerardogtn.graphalgorithms.util.exception;
 
 /**
  * Created by gerardogtn on 11/3/15.
