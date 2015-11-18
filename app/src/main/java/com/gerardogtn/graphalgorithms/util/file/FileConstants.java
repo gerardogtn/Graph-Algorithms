@@ -13,4 +13,10 @@ public class FileConstants {
     public static final String GRAPH_IMAGE_PATH = Environment.getExternalStorageDirectory()
             + File.separator
             + GRAPH_IMAGE_NAME;
+
+
+    public static final String GRAPHML_NAME = "graph.graphml";
+    public static final String GRAPHML_PATH = Environment.getExternalStorageDirectory()
+            + File.separator
+            + GRAPHML_NAME;
 }

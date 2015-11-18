@@ -4,7 +4,14 @@ import android.graphics.PointF;
 import android.support.annotation.Nullable;
 
 import com.gerardogtn.graphalgorithms.util.exception.NodeIdNotFoundException;
+import com.gerardogtn.graphalgorithms.util.file.FileConstants;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -439,6 +446,55 @@ public class Graph {
         edge.setIdle(isIdle);
         listener.redraw();
         Thread.sleep(EDGE_IDLE_ANIMATION_TIME);
+    }
+
+    // REQUIRES: None.
+    // MODIFIES: file at GRAPHML_PATH
+    // EFFECTS:  Exports graph to graphml format, returns false if there was an issue writing, true
+    // otherwise.
+    public static boolean writeGraphml() {
+        File file = new File(FileConstants.GRAPHML_PATH);
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+            writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+            writer.write("<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n");
+            writer.write("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
+            writer.write("    xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n");
+            writer.write("     http://graphml.graphdrawing.org/xmlns/1.1/graphml.xsd\">\n");
+
+            writer.write("  <graph id=\"G\" edgedefault=\"directed\">\n");
+
+            for (Node node : mNodes){
+                writer.write("    <node id=\"" +  node.getId() + "\"/>\n");
+            }
+
+            writer.write("\n");
+
+            int i = 1;
+            for (Edge edge : mEdges){
+                writer.write("    <edge id=\"e"
+                        + i++
+                        + "\" directed=\""
+                        + edge.isDirected()
+                        + "\" source=\""
+                        + edge.getOrigin()
+                        + "\" target=\""
+                        + edge.getDestination()
+                        + "\"/>\n");
+            }
+
+            writer.write("  </graph>\n");
+            writer.write("</graphml>\n");
+            writer.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+
+        }
+        return true;
+
     }
 
 

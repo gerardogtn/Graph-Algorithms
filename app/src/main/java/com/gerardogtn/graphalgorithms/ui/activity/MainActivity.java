@@ -92,9 +92,23 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
             mFab.show();
         } else if (id == R.id.action_share){
             shareGraphImage();
+        } else if (id == R.id.action_export){
+            exportGraph();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void exportGraph() {
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/simple");
+        if (Graph.writeGraphml()) {
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GRAPHML_PATH)));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.export_graph)));
+        } else {
+            Snackbar.make(mFab, "Error exporting graph", Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     private void shareGraphImage() {
