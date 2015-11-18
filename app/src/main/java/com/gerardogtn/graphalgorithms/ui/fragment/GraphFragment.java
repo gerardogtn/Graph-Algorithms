@@ -21,7 +21,7 @@ import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class GraphFragment extends Fragment implements GraphView.ShowDialogListener,
+public class GraphFragment extends Fragment implements GraphView.OnEventListener,
         AddEdgeDialog.OnCreateEdgeListener{
 
     public static final String TAG_NODE_DIALOG = "NodeDialog";
@@ -32,17 +32,6 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
 
     public GraphFragment() {
 
-    }
-
-    public static GraphFragment newInstance() {
-        Bundle args = new Bundle();
-        GraphFragment fragment = new GraphFragment();
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -87,6 +76,11 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         graphView.addNode(node);
     }
 
+
+    // REQUIRES: None.
+    // MODIFIES: graphview.
+    // EFFECTS:  If index is 6, displays Floyd Warshall Dialog. Otherwise executes appropiate
+    // algorithm on graphview.
     public void executeAlgorithm(int index, boolean isStepActive) {
         if (index == 6){
             showFloydWarshallDialog(isStepActive);
@@ -102,10 +96,17 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         dialog.show(manager, TAG_FLOYD_WARSHALL_DIALOG);
     }
 
+    // REQUIRES: None.
+    // MODIFIES: graphview.
+    // EFFECTS:  Resets graphview.
     public void resetGraph(){
         graphView.resetGraph();
     }
 
+
+    // REQUIRES: None.
+    // MODIFIES: graphview.
+    // EFFECTS: Removes edges and nodes and redraws.
     public void clearGraph() {
         graphView.clearEdges();
         graphView.clearNodes();

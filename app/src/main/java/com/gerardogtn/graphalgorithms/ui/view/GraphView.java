@@ -53,6 +53,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private Paint mEdgeIdlePaint = new Paint();
     private Paint mEdgeTextPaint = new Paint();
     private Paint mEdgeIdleTextPaint = new Paint();
+    private Paint mEdgeArrowPaint = new Paint();
 
     private Paint mConnectionPaint = new Paint();
     private Paint mTextConnectionPaint = new Paint();
@@ -61,7 +62,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private Node mCurrentNode;
     private Node mPreviousNode;
 
-    private ShowDialogListener insertListener;
+    private OnEventListener insertListener;
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
 
@@ -119,6 +120,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractEdgePaint(mEdgeIdlePaint, Color.GRAY);
         setUpAbstractTextPaint(mEdgeTextPaint, EDGE_TEXT_COLOR);
         setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.GRAY);
+        setUpAbstractTextPaint(mEdgeArrowPaint, Color.BLACK);
     }
 
     private void setUpAbstractEdgePaint(Paint paint, int color) {
@@ -159,7 +161,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         thread.start();
     }
 
-    public void setEventListener(ShowDialogListener edgeListener) {
+    public void setEventListener(OnEventListener edgeListener) {
         this.insertListener = edgeListener;
     }
 
@@ -205,6 +207,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
             Paint paint = (edge.isActive() ? mEdgeActivePaint : mEdgePaint);
             paint = (edge.isIdle() ? mEdgeIdlePaint : paint);
+
             canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), paint);
 
             if (!edge.isIdle()) {
@@ -441,7 +444,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         return true;
     }
 
-    public interface ShowDialogListener {
+    public interface OnEventListener {
         void showEdgeDialog();
         void showNodeDialog();
     }

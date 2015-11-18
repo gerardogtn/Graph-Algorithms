@@ -25,12 +25,11 @@ import java.util.Stack;
  * Created by gerardogtn on 11/3/15.
  */
 
-// TODO: Implement iterable to avoid getEdges and getNodes.
 public class Graph {
 
     public static final String TAG = "Graph";
 
-    private static boolean isDirected;
+    private static boolean isDirected = false;
     private static boolean isStepByStep;
     private static boolean mNextStep;
 
@@ -74,6 +73,10 @@ public class Graph {
 
     public static boolean getStepByStep() {
         return isStepByStep;
+    }
+
+    public static void setDirected(boolean directed){
+        Graph.isDirected = directed;
     }
 
     public synchronized void addEdge(Edge edge) {
@@ -120,6 +123,12 @@ public class Graph {
         for (Edge edge : mEdges) {
             if (edge.getOrigin().equals(node)) {
                 output.push(edge);
+            }
+
+            if (!isDirected){
+                if (edge.getDestination().equals(node)) {
+                    output.push(edge);
+                }
             }
         }
 
@@ -215,15 +224,27 @@ public class Graph {
             found = false;
 
             for (Edge edge : getEdgesFromNode(currentNode)) {
-                if (!edge.getDestination().wasVisited()) {
+                Node destination;
+
+                if (Graph.isDirected){
+                    destination = edge.getDestination();
+                } else {
+                    if (currentNode == edge.getOrigin()){
+                        destination = edge.getDestination();
+                    } else {
+                        destination = edge.getOrigin();
+                    }
+                }
+
+                if (!destination.wasVisited()) {
                     makeEdgeActive(edge, true);
-                    Node destination = edge.getDestination();
                     stack.push(destination);
                     makeNodeVisited(destination);
                     handleStepper();
                     found = true;
                     break;
                 }
+
                 makeEdgeActive(edge, false);
             }
 
@@ -254,13 +275,23 @@ public class Graph {
 
         queue.add(node);
         while (queue.peek() != null) {
-            for (Edge edge : getEdgesFromNode(queue.remove())) {
-                if (!edge.getDestination().wasVisited()) {
+            Node currentNode = queue.remove();
+            for (Edge edge : getEdgesFromNode(currentNode)) {
+                Node destination;
+
+                if (isDirected){
+                    destination = edge.getDestination();
+                } else {
+                    if (currentNode == edge.getOrigin()){
+                        destination = edge.getDestination();
+                    } else {
+                        destination = edge.getOrigin();
+                    }
+                }
+
+                if (!destination.wasVisited()) {
                     makeEdgeActive(edge, true);
-
-                    Node destination = edge.getDestination();
-                    queue.add(edge.getDestination());
-
+                    queue.add(destination);
                     makeNodeVisited(destination);
                     handleStepper();
                 }
@@ -290,7 +321,18 @@ public class Graph {
 
             for (Edge edge : getEdgesFromNode(node)) {
                 makeEdgeActive(edge, true);
-                Node destination = edge.getDestination();
+
+                Node destination;
+                if (isDirected){
+                    destination = edge.getDestination();
+                } else {
+                    if (node == edge.getOrigin()){
+                        destination = edge.getDestination();
+                    } else {
+                        destination = edge.getOrigin();
+                    }
+                }
+
                 int weight = edge.getWeight();
 
                 if (destination.getDistance() > node.getDistance() + weight) {
@@ -418,7 +460,18 @@ public class Graph {
         for (Node node : mNodes){
             for (Node node2 : mNodes){
                 for(Edge edge : getEdgesFromNode(node)){
-                    if(edge.getDestination() == node2){
+                    Node destination;
+                    if (isDirected){
+                        destination = edge.getDestination();
+                    } else {
+                        if (node == edge.getOrigin()){
+                            destination = edge.getDestination();
+                        } else {
+                            destination = edge.getOrigin();
+                        }
+                    }
+
+                    if(destination == node2){
                         weight = edge.getWeight();
                     }
                 }

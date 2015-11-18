@@ -31,6 +31,7 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity implements GraphView.OnStopAnimationListener, View.OnClickListener {
 
     public static final String TAG = MainActivity.class.getSimpleName();
+    public static final String KEY_IS_DIRECTED = "is_directed";
 
     private GraphFragment mFragment;
 
@@ -43,8 +44,9 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     private static FloatingActionButton mFab;
 
     private boolean isAlgorithmActive = false;
-    private boolean mIsStepActive = false;
-    private boolean needsToBeCleared = false;
+    private boolean mIsStepActive     = false;
+    private boolean needsToBeCleared  = false;
+    private static boolean isDirected = false;
 
     private UpdateFabTask mUpdateFabTask;
 
@@ -53,16 +55,23 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        if (savedInstanceState != null){
+            isDirected = savedInstanceState.getBoolean(KEY_IS_DIRECTED);
+        }
         setUpLayout();
-        mUpdateFabTask = new UpdateFabTask();
-        mFab = (FloatingActionButton) findViewById(R.id.fab);
-        mFab.setOnClickListener(this);
     }
 
     private void setUpLayout() {
         setSupportActionBar(mToolbar);
         setUpSpinner();
         setUpGraphFragment();
+        setUpFab();
+    }
+
+    private void setUpFab() {
+        mUpdateFabTask = new UpdateFabTask();
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab.setOnClickListener(this);
     }
 
     private void setUpSpinner() {
@@ -74,9 +83,16 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
 
     private void setUpGraphFragment() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        mFragment = GraphFragment.newInstance();
+        mFragment = new GraphFragment();
         ft.add(R.id.fgmt_main, mFragment);
         ft.commit();
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_IS_DIRECTED, isDirected);
     }
 
     @Override
@@ -86,31 +102,57 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
         int id = item.getItemId();
+
+        if (isAlgorithmActive){
+            Snackbar.make(mFab, "Please wait for the animation to stop", Snackbar.LENGTH_SHORT)
+                    .show();
+            return true;
+        }
 
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_speed) {
             changeAnimationMode(item);
+            return true;
         } else if (id == R.id.action_clear) {
             mFragment.clearGraph();
             mFab.show();
+            return true;
         } else if (id == R.id.action_share) {
             shareGraphImage();
+            return true;
         } else if (id == R.id.action_export) {
             exportGraph();
+            return true;
+        } else if (id == R.id.action_is_directed){
+
+            Snackbar.make(mFab, "We need to delete the graph before changing the type", Snackbar.LENGTH_LONG)
+                    .setAction("CONTINUE", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mFragment.clearGraph();
+                            isDirected = !item.isChecked();
+                            item.setChecked(isDirected);
+                            Graph.setDirected(isDirected);
+                        }
+                    })
+                    .show();
+
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     private void exportGraph() {
+        Intent.ACTION_GET_CONTENT
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/simple");
         if (Graph.writeGraphml()) {
             shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GRAPHML_PATH)));
-            startActivity(Intent.createChooser(shareIntent, getString(R.string.export_graph)));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.action_export_graph)));
         } else {
             Snackbar.make(mFab, "Error exporting graph", Snackbar.LENGTH_SHORT).show();
         }
@@ -121,26 +163,31 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         shareIntent.setType("image/jpeg");
         if (mFragment.writeGraphImage()) {
             shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GRAPH_IMAGE_PATH)));
-            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_graph)));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.action_share_graph)));
         }
     }
 
     private void changeAnimationMode(MenuItem item) {
         if (mIsStepActive) {
-            abstractChangeAnimationMode(item, R.drawable.ic_action_fast_forward, "Fast forward mode activated");
+            abstractChangeAnimationMode(item, R.drawable.ic_action_fast_forward, R.string.fast_forward_mode);
         } else {
-            abstractChangeAnimationMode(item, R.drawable.ic_action_play, "Step by step mode activated");
+            abstractChangeAnimationMode(item, R.drawable.ic_action_play, R.string.step_mode_activated);
         }
     }
 
-    private void abstractChangeAnimationMode(MenuItem item, int drawableResource, String message) {
+    private void abstractChangeAnimationMode(MenuItem item, int drawableResource, int messageId) {
         mIsStepActive = !mIsStepActive;
         item.setIcon(drawableResource);
-        Snackbar.make(mFab, message, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(mFab, messageId, Snackbar.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.img_go)
     void animateAlgorithm() {
+
+        if (isAlgorithmActive){
+            return;
+        }
+
         Graph.setOnStopListener(this);
         Graph.setStepByStep(mIsStepActive);
 
@@ -160,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     private void notifyUndirectedGraphAssumption(int selectedAlgorithm) {
         if (selectedAlgorithm == 2 || selectedAlgorithm == 3) {
             Snackbar.make(mFab,
-                    "This algorithm assumes that the graph is undirected",
+                    R.string.undirected_graph_assumption,
                     Snackbar.LENGTH_SHORT)
                     .show();
         }
@@ -204,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
 
     private void nextStep() {
         Graph graph = Graph.getInstance(true);
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (graph) {
             if (Graph.getStepByStep()) {
                 Graph.setNextStep(false);

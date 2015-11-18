@@ -5,13 +5,14 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="action_clear_graph">Clear graph</string>
+    <string name="action_share_graph">Share graph</string>
+    <string name="action_export_graph">Export graph</string>
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_code_visualization">CodeVisualizationActivity</string>
-    <string name="clear_graph">Clear graph</string>
     <string name="clear_algorithm">Clear algorithm</string>
-    <string name="share_graph">Share graph</string>
     <string name="default_animation_speed">Default animation speed</string>
     <string name="start">Start</string>
     <string name="floyd_warshall">Floyd Warshall</string>
@@ -19,5 +20,9 @@
     <string name="inf">INF</string>
     <string name="next">Next</string>
     <string name="one_edge">There must be at least one edge to animate an algorithm</string>
-    <string name="export_graph">Export graph</string>
+    <string name="step_mode_activated">Step by step mode activated</string>
+    <string name="fast_forward_mode">Fast forward mode activated</string>
+    <string name="undirected_graph_assumption">This algorithm assumes that the graph is undirected</string>
+    <string name="is_directed">Is directed</string>
+    <string name="edge_weight">Edge weight</string>
 </resources>
