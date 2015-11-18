@@ -3,13 +3,12 @@ package com.gerardogtn.graphalgorithms.data.model;
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
 
+import com.gerardogtn.graphalgorithms.ui.view.GraphView;
 import com.gerardogtn.graphalgorithms.util.exception.NodeIdNotFoundException;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
@@ -31,7 +30,9 @@ public class Graph {
 
     public static final String TAG = "Graph";
 
-    private boolean isDirected;
+    private static boolean isDirected;
+    private static boolean isStepByStep;
+    private static boolean mNextStep;
 
     private static Graph mInstance;
 
@@ -39,6 +40,7 @@ public class Graph {
     private static LinkedList<Node> mNodes;
 
     private OnGraphUpdateListener listener;
+    private static GraphView.OnStopAnimationListener mOnStopListener;
 
     public static final int NODE_VISITED_ANIMATION_TIME = 700;
     public static final int NODE_ACTIVE_ANIMATION_TIME = 700;
@@ -48,7 +50,7 @@ public class Graph {
     private Graph(boolean isDirected) {
         mEdges = new LinkedHashSet<>();
         mNodes = new LinkedList<>();
-        this.isDirected = isDirected;
+        Graph.isDirected = isDirected;
     }
 
     public static Graph getInstance(boolean isDirected) {
@@ -56,6 +58,22 @@ public class Graph {
             mInstance = new Graph(isDirected);
         }
         return mInstance;
+    }
+
+    public static void setOnStopListener(GraphView.OnStopAnimationListener listener){
+        Graph.mOnStopListener = listener;
+    }
+
+    public static void setStepByStep(boolean stepByStep) {
+        Graph.isStepByStep = stepByStep;
+    }
+
+    public static void setNextStep(boolean nextStep){
+        Graph.mNextStep = nextStep;
+    }
+
+    public static boolean getStepByStep() {
+        return isStepByStep;
     }
 
     public synchronized void addEdge(Edge edge) {
@@ -69,12 +87,6 @@ public class Graph {
 
     public synchronized void addNode(Node node) {
         mNodes.push(node);
-    }
-
-    public synchronized void addNodes(List<Node> nodes) {
-        for (Node node : nodes) {
-            addNode(node);
-        }
     }
 
     public synchronized void addEdges(List<Edge> edges) {
@@ -188,6 +200,7 @@ public class Graph {
         mEdges = new LinkedHashSet<>();
     }
 
+
     public synchronized void dfs() throws InterruptedException {
         Node node = mNodes.getLast();
 
@@ -204,11 +217,10 @@ public class Graph {
             for (Edge edge : getEdgesFromNode(currentNode)) {
                 if (!edge.getDestination().wasVisited()) {
                     makeEdgeActive(edge, true);
-
                     Node destination = edge.getDestination();
                     stack.push(destination);
                     makeNodeVisited(destination);
-
+                    handleStepper();
                     found = true;
                     break;
                 }
@@ -217,6 +229,19 @@ public class Graph {
 
             if (!found) {
                 stack.pop();
+            }
+        }
+
+        mOnStopListener.stopAnimation(true);
+    }
+
+    private void handleStepper() throws InterruptedException{
+        if (isStepByStep) {
+            mNextStep = true;
+            synchronized (mInstance) {
+                while (mNextStep) {
+                    mInstance.wait();
+                }
             }
         }
     }
@@ -237,6 +262,7 @@ public class Graph {
                     queue.add(edge.getDestination());
 
                     makeNodeVisited(destination);
+                    handleStepper();
                 }
                 makeEdgeActive(edge, false);
             }
@@ -273,6 +299,7 @@ public class Graph {
                     destination.setParent(node);
                     listener.connectNodes();
                     Thread.sleep(700);
+                    handleStepper();
                 }
                 makeEdgeIdle(edge, true);
             }
@@ -299,6 +326,7 @@ public class Graph {
                     listener.connectNodes();
                     Thread.sleep(700);
                     relax = true;
+                    handleStepper();
                 }
 
                 makeEdgeIdle(edge, true);
@@ -323,6 +351,7 @@ public class Graph {
             if (!edge.getDestination().wasVisited()) {
                 Node node = edge.getDestination();
                 makeNodeVisited(node);
+                handleStepper();
 
                 for (Edge current : getEdgesFromNode(node)){
                     queue.push(current);
@@ -355,6 +384,7 @@ public class Graph {
             Node destination = currentEdge.getDestination();
             makeNodeVisited(origin);
             makeNodeVisited(destination);
+            handleStepper();
 
             int originSet = origin.getSet();
             int destinationSet = destination.getSet();
@@ -368,7 +398,6 @@ public class Graph {
                 }
                 origin.setSet(currentGroup);
                 destination.setSet(currentGroup++);
-
                 makeEdgeActive(currentEdge, false);
             } else {
                 makeEdgeIdle(currentEdge, true);

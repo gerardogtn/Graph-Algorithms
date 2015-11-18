@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.gerardogtn.graphalgorithms.R;
+import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.ui.dialog.AddEdgeDialog;
@@ -90,6 +91,7 @@ public class GraphFragment extends Fragment implements GraphView.ShowDialogListe
         if (index == 6){
             showFloydWarshallDialog(isStepActive);
         } else {
+            Graph.setStepByStep(isStepActive);
             graphView.executeAlgorithm(index);
         }
     }

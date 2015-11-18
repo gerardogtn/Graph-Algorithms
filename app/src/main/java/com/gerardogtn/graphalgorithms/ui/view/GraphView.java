@@ -8,7 +8,6 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.support.design.widget.Snackbar;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -17,14 +16,11 @@ import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
-import com.gerardogtn.graphalgorithms.util.exception.GraphImageFileException;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Iterator;
 
 
@@ -41,8 +37,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     private int mIndex = 0;
 
-    private boolean mWasMoved = false;
-    private boolean mIsDialogActive = false;
+    private boolean mWasMoved        = false;
+    private boolean mIsDialogActive  = false;
     private boolean mShowConnections = false;
 
     private Paint mBackgroundPaint;
@@ -66,11 +62,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private Node mPreviousNode;
 
     private ShowDialogListener insertListener;
-    private Context mContext;
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
-
-    private Bitmap bitmap;
 
 
     public GraphView(Context context) {
@@ -79,7 +72,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context.getApplicationContext();
+        Context mContext = context.getApplicationContext();
         mGraph = Graph.getInstance(false);
         mGraph.setOnGraphUpdateListener(this);
         mDbHandler = new GraphDbHandler(mContext);
@@ -396,13 +389,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             e.printStackTrace();
         }
 
-        post(new Runnable() {
-            @Override
-            public void run() {
-                mStopListener.stopAnimation(true);
-            }
-        });
-
+        mStopListener.stopAnimation(true);
     }
 
     public void resetGraph() {
@@ -429,7 +416,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this.
     // EFFECTS:  Saves graphview as JPEG, if save was unsuccesful return false, otherwise true.
     public boolean writeGraphImage() {
-        bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
+        Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
         Canvas canvas = new Canvas(bitmap);
 
         canvas.drawPaint(mBackgroundPaint);
@@ -443,11 +430,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
         try {
             FileOutputStream stream = new FileOutputStream(file);
-            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)){
-                Log.wtf(TAG, "Creo imagen correctamente");
-            } else {
-                Log.wtf(TAG, "No pude crear imagen");
-            }
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
             stream.close();
         } catch (IOException e) {
             e.printStackTrace();
