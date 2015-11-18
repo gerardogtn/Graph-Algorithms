@@ -478,9 +478,9 @@ public class Graph {
                         + "\" directed=\""
                         + edge.isDirected()
                         + "\" source=\""
-                        + edge.getOrigin()
+                        + edge.getOrigin().getId()
                         + "\" target=\""
-                        + edge.getDestination()
+                        + edge.getDestination().getId()
                         + "\"/>\n");
             }
 
