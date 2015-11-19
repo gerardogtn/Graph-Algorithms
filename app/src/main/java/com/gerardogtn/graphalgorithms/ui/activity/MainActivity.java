@@ -56,10 +56,10 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     @Bind(R.id.spnr_modes)
     Spinner mSpinner;
 
-    private static FloatingActionButton mFab;
+    public static FloatingActionButton mFab;
     public static Menu mMenu;
 
-    private boolean isAlgorithmActive = false;
+    public static boolean isAlgorithmActive = false;
     private boolean mIsStepActive     = false;
     private boolean needsToBeCleared  = false;
     private static boolean isDirected = false;
@@ -245,6 +245,12 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
             return;
         }
 
+        int selectedAlgorithm = mSpinner.getSelectedItemPosition();
+
+        if (selectedAlgorithm == 6 && Graph.getNodesSize() > 7){
+            Snackbar.make(mFab, R.string.floyd_warshall_max, Snackbar.LENGTH_LONG).show();
+            return;
+        }
         Graph.setOnStopListener(this);
         Graph.setStepByStep(mIsStepActive);
 
@@ -252,7 +258,6 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
             UpdateFabTask.setIsAlgorithmActive(true);
             updateFab();
             isAlgorithmActive = true;
-            int selectedAlgorithm = mSpinner.getSelectedItemPosition();
             notifyUndirectedGraphAssumption(selectedAlgorithm);
             mFragment.executeAlgorithm(selectedAlgorithm, mIsStepActive);
         } else {

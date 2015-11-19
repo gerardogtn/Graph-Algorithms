@@ -26,4 +26,5 @@
     <string name="is_directed">Is directed</string>
     <string name="edge_weight">Edge weight</string>
     <string name="import_graph">Import graph</string>
+    <string name="floyd_warshall_max">We\'re sorry, we only support up to 7 nodes for Floyd Warshall</string>
 </resources>

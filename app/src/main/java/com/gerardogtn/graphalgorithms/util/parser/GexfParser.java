@@ -23,6 +23,7 @@ public class GexfParser extends DefaultHandler {
     private boolean isDirected;
     private LinkedList<Node> nodes;
     private LinkedList<Edge> edges;
+    private boolean parseStarted = false;
 
     public GexfParser() {
         nodes = new LinkedList<>();
@@ -38,30 +39,35 @@ public class GexfParser extends DefaultHandler {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 
-
-        if (qName.toLowerCase().equals("node")) {
+        if (!parseStarted){
+            if (qName.toLowerCase().equals("gexf")){
+                parseStarted = true;
+            } else {
+                throw new ParseGexfException("Format not supported");
+            }
+        }else if (qName.toLowerCase().equals("node")) {
             Node node = new Node(0);
             node.setId(parseNodeOrEdge(attributes.getValue("id")));
             nodes.add(node);
+            if (nodes.size() > 50){
+                throw new ParseGexfException("There are too many nodes");
+            }
         } else if (qName.toLowerCase().equals("edge")) {
             int originId = parseNodeOrEdge(attributes.getValue("source"));
             int targetId = parseNodeOrEdge(attributes.getValue("target"));
-            float weight = Float.parseFloat(attributes.getValue("weight"));
-            Edge edge = new Edge(getNodeById(originId), getNodeById(targetId), (int) weight, isDirected);
+            Edge edge;
+            if (attributes.getValue("weight") != null) {
+                float weight = Float.parseFloat(attributes.getValue("weight"));
+                edge = new Edge(getNodeById(originId), getNodeById(targetId), (int) weight, isDirected);
+            } else {
+                edge = new Edge(getNodeById(originId), getNodeById(targetId), 0, isDirected);
+            }
             edges.add(edge);
 
         } else if (qName.toLowerCase().equals("graph")){
             isDirected = (attributes.getValue("defaultedgetype").equals("directed"));
         }
-    }
 
-    private boolean parseDirected(String edgedefault) {
-        if (edgedefault.equals("directed")) {
-            return true;
-        } else if (edgedefault.equals("undirected")) {
-            return false;
-        }
-        throw new IllegalArgumentException("Couldn't set graph type");
     }
 
     private int parseNodeOrEdge(String node) {

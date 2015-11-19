@@ -2,6 +2,7 @@ package com.gerardogtn.graphalgorithms.ui.fragment;
 
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
@@ -77,7 +78,7 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
     }
 
 
-    // REQUIRES: None.
+    // REQUIRES: Graph.mNodes size is less than 8 .
     // MODIFIES: graphview.
     // EFFECTS:  If index is 6, displays Floyd Warshall Dialog. Otherwise executes appropiate
     // algorithm on graphview.
