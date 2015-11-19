@@ -25,4 +25,5 @@
     <string name="undirected_graph_assumption">This algorithm assumes that the graph is undirected</string>
     <string name="is_directed">Is directed</string>
     <string name="edge_weight">Edge weight</string>
+    <string name="import_graph">Import graph</string>
 </resources>

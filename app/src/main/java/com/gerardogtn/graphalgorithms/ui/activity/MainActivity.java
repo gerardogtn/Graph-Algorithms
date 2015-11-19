@@ -1,5 +1,6 @@
 package com.gerardogtn.graphalgorithms.ui.activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,9 +20,22 @@ import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.fragment.GraphFragment;
 import com.gerardogtn.graphalgorithms.ui.view.GraphView;
+import com.gerardogtn.graphalgorithms.util.exception.ParseGexfException;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
+import com.gerardogtn.graphalgorithms.util.parser.GexfParser;
+
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -42,12 +56,17 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
     Spinner mSpinner;
 
     private static FloatingActionButton mFab;
+    private static Menu mMenu;
 
     private boolean isAlgorithmActive = false;
     private boolean mIsStepActive     = false;
     private boolean needsToBeCleared  = false;
     private static boolean isDirected = false;
+    private static boolean mIsReadingFile = false;
 
+    private ProgressDialog mProgressDialog;
+    private Thread mLoadThread;
+    private LoadGraphTask mLoadGraphTask;
     private UpdateFabTask mUpdateFabTask;
 
     @Override
@@ -59,7 +78,34 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
             isDirected = savedInstanceState.getBoolean(KEY_IS_DIRECTED);
         }
         setUpLayout();
+        handleSendIntent(getIntent());
     }
+
+    // TODO: Add loading dialog.
+    private void handleSendIntent(Intent intent) {
+        String type = intent.getType();
+        if (Intent.ACTION_SEND.equals(intent.getAction()) && type != null){
+            if (type.equals("text/xml")){
+                try {
+                    Uri uri = (Uri) getIntent().getExtras().get(Intent.EXTRA_STREAM);
+                    mIsReadingFile = true;
+                    assert uri != null;
+                    mLoadGraphTask = new LoadGraphTask(getContentResolver().openInputStream(uri));
+                    mLoadThread = new Thread(mLoadGraphTask);
+                    mLoadThread.start();
+                    showProgressDialog();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void showProgressDialog() {
+        mProgressDialog = ProgressDialog.show(this, "dialog title",
+                "dialog message", true);
+    }
+
 
     private void setUpLayout() {
         setSupportActionBar(mToolbar);
@@ -88,6 +134,12 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         ft.commit();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        mMenu = menu;
+        return true;
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -95,11 +147,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         outState.putBoolean(KEY_IS_DIRECTED, isDirected);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
@@ -123,7 +171,10 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         } else if (id == R.id.action_share) {
             shareGraphImage();
             return true;
-        } else if (id == R.id.action_export) {
+        } else if (id == R.id.action_import) {
+            importGraph();
+            return true;
+        }else if (id == R.id.action_export) {
             exportGraph();
             return true;
         } else if (id == R.id.action_is_directed){
@@ -146,12 +197,17 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         return super.onOptionsItemSelected(item);
     }
 
+    private void importGraph() {
+        Intent getDateIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getDateIntent.setType("text/simple");
+
+    }
+
     private void exportGraph() {
-        Intent.ACTION_GET_CONTENT
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/simple");
-        if (Graph.writeGraphml()) {
-            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GRAPHML_PATH)));
+        shareIntent.setType("text/xml");
+        if (Graph.writeGexf()) {
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(FileConstants.GEXF_PATH)));
             startActivity(Intent.createChooser(shareIntent, getString(R.string.action_export_graph)));
         } else {
             Snackbar.make(mFab, "Error exporting graph", Snackbar.LENGTH_SHORT).show();
@@ -294,5 +350,78 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
 
         }
     }
+
+    private class LoadGraphTask implements Runnable{
+
+        private InputStream inputStream;
+
+        public LoadGraphTask(InputStream inputStream) {
+            this.inputStream = inputStream;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            writeGexf(inputStream);
+            parseGexf();
+            mIsReadingFile = false;
+
+            while (mMenu == null){
+
+            }
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mProgressDialog.dismiss();
+                    mFragment.resetGraph();
+                    mMenu.findItem(R.id.action_is_directed).setChecked(Graph.getDirected());
+                }
+            });
+        }
+
+        private void writeGexf(InputStream inputStream) {
+
+            File file = new File(FileConstants.GEXF_PATH);
+            OutputStream output = null;
+            try {
+                output = new FileOutputStream(file);
+                try {
+                    byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                    int read;
+
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        output.write(buffer, 0, read);
+                    }
+                    output.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Snackbar.make(mFab, "Error loading file", Snackbar.LENGTH_SHORT).show();
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void parseGexf(){
+            try {
+                XMLReader reader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                GexfParser handler = new GexfParser();
+                reader.setContentHandler(handler);
+                reader.parse(Uri.fromFile(new File(FileConstants.GEXF_PATH)).toString());
+            } catch (SAXException | ParserConfigurationException | IOException e) {
+                e.printStackTrace();
+            } catch (ParseGexfException e){
+                Snackbar.make(mFab, "Error parsing", Snackbar.LENGTH_LONG).show();
+                Graph.clearGraph();
+            }
+        }
+    }
+
+
 
 }

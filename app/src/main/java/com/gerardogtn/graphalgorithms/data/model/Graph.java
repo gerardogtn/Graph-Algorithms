@@ -75,11 +75,15 @@ public class Graph {
         return isStepByStep;
     }
 
+    public static boolean getDirected(){
+        return isDirected;
+    }
+
     public static void setDirected(boolean directed){
         Graph.isDirected = directed;
     }
 
-    public synchronized void addEdge(Edge edge) {
+    public static synchronized void addEdge(Edge edge) {
         mEdges.add(edge);
     }
 
@@ -88,17 +92,23 @@ public class Graph {
         mEdges.add(edge);
     }
 
-    public synchronized void addNode(Node node) {
+    public static synchronized void addNode(Node node) {
         mNodes.push(node);
     }
 
-    public synchronized void addEdges(List<Edge> edges) {
+    public static synchronized void addEdges(List<Edge> edges) {
         for (Edge edge : edges) {
             addEdge(edge);
         }
     }
 
-    public synchronized void addNodesReverse(LinkedList<Node> nodes) {
+    public static synchronized void addNodes(List<Node> nodes){
+        for (Node node : nodes){
+            addNode(node);
+        }
+    }
+
+    public static synchronized void addNodesReverse(LinkedList<Node> nodes) {
         Iterator<Node> iterator = nodes.descendingIterator();
         while (iterator.hasNext()) {
             addNode(iterator.next());
@@ -201,11 +211,16 @@ public class Graph {
         }
     }
 
-    public synchronized void clearNodes() {
+    public static synchronized void clearGraph(){
+        clearNodes();
+        clearEdges();
+    }
+
+    public static synchronized void clearNodes() {
         mNodes = new LinkedList<>();
     }
 
-    public void clearEdges() {
+    public static synchronized void clearEdges() {
         mEdges = new LinkedHashSet<>();
     }
 
@@ -531,28 +546,32 @@ public class Graph {
     }
 
     // REQUIRES: None.
-    // MODIFIES: file at GRAPHML_PATH
+    // MODIFIES: file at GEXF_PATH
     // EFFECTS:  Exports graph to graphml format, returns false if there was an issue writing, true
     // otherwise.
-    public static boolean writeGraphml() {
-        File file = new File(FileConstants.GRAPHML_PATH);
+    // TODO: Change to GEXF
+    public static boolean writeGexf() {
+        File file = new File(FileConstants.GEXF_PATH);
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
             writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-            writer.write("<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n");
-            writer.write("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
-            writer.write("    xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n");
-            writer.write("     http://graphml.graphdrawing.org/xmlns/1.1/graphml.xsd\">\n");
+            writer.write("<gexf xmlns=\"http://www.gexf.net/1.2draft\" version=\"1.2\">\n");
 
-            writer.write("  <graph id=\"G\" edgedefault=\"directed\">\n");
+            if (isDirected) {
+                writer.write("  <graph mode=\"static\" defaultedgetype=\"directed\">\n");
+            } else {
+                writer.write("  <graph mode=\"static\" defaultedgetype=\"undirected\">\n");
+            }
 
+            writer.write("    <nodes>\n");
             for (Node node : mNodes){
                 writer.write("    <node id=\"" +  node.getId() + "\"/>\n");
             }
+            writer.write("    </nodes>\n");
 
-            writer.write("\n");
 
+            writer.write("    <edges>\n");
             int i = 1;
             for (Edge edge : mEdges){
                 writer.write("    <edge id=\"e"
@@ -563,11 +582,14 @@ public class Graph {
                         + edge.getOrigin().getId()
                         + "\" target=\""
                         + edge.getDestination().getId()
+                        + "\" weight=\""
+                        + edge.getWeight()
                         + "\"/>\n");
             }
+            writer.write("    </edges>\n");
 
             writer.write("  </graph>\n");
-            writer.write("</graphml>\n");
+            writer.write("</gexf>\n");
             writer.close();
 
         } catch (IOException e) {
@@ -578,7 +600,6 @@ public class Graph {
         return true;
 
     }
-
 
     public interface OnGraphUpdateListener {
         void redraw();

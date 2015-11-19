@@ -15,8 +15,8 @@ public class FileConstants {
             + GRAPH_IMAGE_NAME;
 
 
-    public static final String GRAPHML_NAME = "graph.graphml";
-    public static final String GRAPHML_PATH = Environment.getExternalStorageDirectory()
+    public static final String GEXF_NAME = "graph.gexf";
+    public static final String GEXF_PATH = Environment.getExternalStorageDirectory()
             + File.separator
-            + GRAPHML_NAME;
+            + GEXF_NAME;
 }
