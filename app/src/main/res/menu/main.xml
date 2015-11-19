@@ -23,10 +23,6 @@
         android:title="@string/action_clear_graph"
         app:showAsAction="never"/>
 
-    <item android:id="@+id/action_import"
-        android:title="@string/import_graph"
-        app:showAsAction="never"/>
-
     <item android:id="@+id/action_export"
         android:title="@string/action_export_graph"
         app:showAsAction="never"/>
