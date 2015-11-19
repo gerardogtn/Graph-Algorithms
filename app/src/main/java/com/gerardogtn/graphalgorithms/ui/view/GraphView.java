@@ -3,7 +3,6 @@ package com.gerardogtn.graphalgorithms.ui.view;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.support.design.widget.Snackbar;
@@ -16,6 +15,7 @@ import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
+import com.gerardogtn.graphalgorithms.util.constant.Color;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
 
 import java.io.File;
@@ -31,9 +31,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public static final String TAG = GraphView.class.getSimpleName();
 
-    public static final int BACKGROUND_COLOR = 0xFFF8EFE0;
+    public static final int BACKGROUND_COLOR = Color.BEIGE;
     public static final int NODE_TEXT_COLOR = Color.WHITE;
-    public static final int EDGE_TEXT_COLOR = 0xFFFF4081;
+    public static final int EDGE_TEXT_COLOR = Color.PINK;
 
     private int mIndex = 0;
 
@@ -94,7 +94,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mBackgroundPaint.setColor(BACKGROUND_COLOR);
     }
 
-    // TODO: Verify that colors are material design approved.
     private void setUpNodePaints() {
         setUpAbstractNodePaint(mNodePaint, Node.COLOR);
         setUpAbstractNodePaint(mNodeVisitedPaint, Node.COLOR_VISITED);
@@ -117,9 +116,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private void setUpEdgePaint() {
         setUpAbstractEdgePaint(mEdgePaint, Color.BLACK);
         setUpAbstractEdgePaint(mEdgeActivePaint, Color.RED);
-        setUpAbstractEdgePaint(mEdgeIdlePaint, Color.GRAY);
+        setUpAbstractEdgePaint(mEdgeIdlePaint, Color.BLUE_GRAY);
         setUpAbstractTextPaint(mEdgeTextPaint, EDGE_TEXT_COLOR);
-        setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.GRAY);
+        setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.BLUE_GRAY);
         setUpAbstractTextPaint(mEdgeArrowPaint, Color.BLACK);
     }
 
@@ -130,22 +129,24 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         paint.setAntiAlias(true);
     }
 
-    // TODO: Change green color.
     private void setUpConnectionPaint() {
-        setUpAbstractEdgePaint(mConnectionPaint, Color.GREEN);
-        setUpAbstractTextPaint(mTextConnectionPaint, Color.GREEN);
+        setUpAbstractEdgePaint(mConnectionPaint, Color.PURPLE);
+        setUpAbstractTextPaint(mTextConnectionPaint, Color.PURPLE);
     }
 
     public void loadGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                mGraph.addNodesReverse(mDbHandler.getNodes());
-                mGraph.addEdges(mDbHandler.getEdges());
+                Graph.addNodesReverse(mDbHandler.getNodes());
+                Graph.addEdges(mDbHandler.getEdges());
+                if (!mDbHandler.getEdges().isEmpty()) {
+                    Graph.setDirected(mDbHandler.getEdges().get(0).isDirected());
+                }
+                redraw();
             }
         });
         thread.start();
-        redraw();
     }
 
     public void saveGraph() {

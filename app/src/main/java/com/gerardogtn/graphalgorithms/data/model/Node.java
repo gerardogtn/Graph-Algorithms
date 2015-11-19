@@ -3,6 +3,8 @@ package com.gerardogtn.graphalgorithms.data.model;
 import android.graphics.PointF;
 import android.support.annotation.NonNull;
 
+import com.gerardogtn.graphalgorithms.util.constant.Color;
+
 /**
  * Created by gerardogtn on 11/1/15.
  */
@@ -12,9 +14,9 @@ public class Node implements Comparable<Node>{
 
     public static final int MAX_VALUE = 0x0FFFFFFF;
 
-    public static final int COLOR = 0xFF3F51B5;
-    public static final int COLOR_VISITED = 0xFFFF5722;
-    public static final int COLOR_ACTIVE = 0xFFF44336;
+    public static final int COLOR = Color.BLUE;
+    public static final int COLOR_VISITED = Color.ORANGE;
+    public static final int COLOR_ACTIVE = Color.RED;
     public static final float RADIUS =  50;
     public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
 

@@ -565,8 +565,11 @@ public class Graph {
             }
 
             writer.write("    <nodes>\n");
-            for (Node node : mNodes){
-                writer.write("    <node id=\"" +  node.getId() + "\"/>\n");
+
+
+            Iterator<Node> iterator = mNodes.descendingIterator();
+            while (iterator.hasNext()) {
+                writer.write("    <node id=\"" +  iterator.next().getId() + "\"/>\n");
             }
             writer.write("    </nodes>\n");
 
