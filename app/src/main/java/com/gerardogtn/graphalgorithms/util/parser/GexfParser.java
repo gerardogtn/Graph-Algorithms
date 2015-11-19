@@ -82,9 +82,6 @@ public class GexfParser extends DefaultHandler {
     }
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.toLowerCase().equals("nodes")) {
-            Collections.sort(nodes);
-        }
         accumulator.setLength(0);
     }
 
@@ -92,11 +89,15 @@ public class GexfParser extends DefaultHandler {
         accumulator.append(temp, start, length);
     }
 
+
+    // TODO: Check order of insertion.
+    // TODO: Limit floyd warshall.
     @Override
     public void endDocument() throws SAXException {
         if (nodes.size() < 50){
+            Collections.sort(nodes);
             Graph.clearGraph();
-            Graph.addNodesReverse(nodes);
+            Graph.addNodes(nodes);
             Graph.addEdges(edges);
         } else {
             throw new ParseGexfException("There are too many nodes");
