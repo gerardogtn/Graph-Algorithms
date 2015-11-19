@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.support.design.widget.Snackbar;
 import android.util.AttributeSet;
@@ -37,8 +38,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     private int mIndex = 0;
 
-    private boolean mWasMoved        = false;
-    private boolean mIsDialogActive  = false;
+    private boolean mWasMoved = false;
+    private boolean mIsDialogActive = false;
     private boolean mShowConnections = false;
 
     private Paint mBackgroundPaint;
@@ -134,6 +135,10 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractTextPaint(mTextConnectionPaint, Color.PURPLE);
     }
 
+    // ASSUMES: If graph is directed all edges are directed.
+    // REQUIRES: None.
+    // MODIFIES: Database.
+    // EFFECTS: Clear graph database and set to values in graph singleton
     public void loadGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -149,6 +154,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         thread.start();
     }
 
+    // REQUIRES: None.
+    // MODIFIES: Database.
+    // EFFECTS: Clear graph singleton and set to values in database.
     public void saveGraph() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -175,7 +183,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         }
         drawNodes(canvas);
     }
-
 
 
     // REQUIRES: None.
@@ -210,7 +217,11 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             paint = (edge.isIdle() ? mEdgeIdlePaint : paint);
 
             canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), paint);
-
+            if (edge.isDirected()) {
+                Point circle = getPosPoint(origin.getX(), origin.getY(), destination.getX(), destination.getY());
+                paint.setStyle(Paint.Style.FILL);
+                canvas.drawCircle(circle.x, circle.y, 20, paint);
+            }
             if (!edge.isIdle()) {
                 drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
                         origin.getX(), destination.getX(),
@@ -218,6 +229,41 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             }
 
         }
+    }
+
+    private Point getPosPoint(float x0, float y0, float x1, float y1) {
+        Point point = new Point();
+
+        float xLen = (x0 - x1);
+        float yLen = (y0 - y1);
+        float xMid = Math.abs(x0 + x1) / 20;
+
+
+        if (Math.abs(xLen) < 40) {
+            if (xLen < 0){
+                point.x = (int) (x1 + 10);
+            } else {
+                point.x = (int) (x1 - 10);
+            }
+
+            if (yLen < 0){
+                point.y = (int) (y1 - 10);
+            } else {
+                point.y = (int) (y1 + 10);
+            }
+
+
+
+        } else if (xLen > 10) {
+            point.y = (int) ((yLen * xMid / xLen) + y1);
+            point.x = (int) (x1 + xMid);
+        } else if (xLen < 1) {
+            point.y = (int) ((yLen * xMid / (-1 * xLen)) + y1);
+            point.x = (int) (x1 - xMid);
+        }
+
+        return point;
+
     }
 
     // REQUIRES: None.
@@ -447,6 +493,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public interface OnEventListener {
         void showEdgeDialog();
+
         void showNodeDialog();
     }
 
@@ -455,16 +502,16 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     }
 
 
-    private static class SaveBitmapTask implements Runnable{
+    private static class SaveBitmapTask implements Runnable {
 
         private static SaveBitmapTask mTask;
 
-        private SaveBitmapTask(){
+        private SaveBitmapTask() {
 
         }
 
         public static SaveBitmapTask getInstance() {
-            if (mTask == null){
+            if (mTask == null) {
                 mTask = new SaveBitmapTask();
             }
             return mTask;

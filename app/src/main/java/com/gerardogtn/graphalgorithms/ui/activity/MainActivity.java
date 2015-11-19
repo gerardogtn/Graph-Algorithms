@@ -9,6 +9,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -368,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
         @Override
         public void run() {
             try {
-                Thread.sleep(300);
+                Thread.sleep(600);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -379,6 +380,7 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
                 public void run() {
                     mProgressDialog.dismiss();
                     mFragment.resetGraph();
+                    Log.wtf(TAG, Graph.getDirected()? "Is directed" : "Is not directed");
                     mMenu.findItem(R.id.action_is_directed).setChecked(Graph.getDirected());
                 }
             });
@@ -420,6 +422,8 @@ public class MainActivity extends AppCompatActivity implements GraphView.OnStopA
                 Snackbar.make(mFab, "Error parsing", Snackbar.LENGTH_LONG).show();
                 Graph.clearGraph();
             }
+
+            Log.wtf(TAG, "Parse finished");
         }
     }
 

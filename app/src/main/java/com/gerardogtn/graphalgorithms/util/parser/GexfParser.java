@@ -18,6 +18,7 @@ import java.util.LinkedList;
  */
 public class GexfParser extends DefaultHandler {
 
+    public static final String TAG = GexfParser.class.getSimpleName();
     private StringBuffer accumulator;
 
     private boolean isDirected;
@@ -66,6 +67,7 @@ public class GexfParser extends DefaultHandler {
 
         } else if (qName.toLowerCase().equals("graph")){
             isDirected = (attributes.getValue("defaultedgetype").equals("directed"));
+            Graph.setDirected(isDirected);
         }
 
     }
