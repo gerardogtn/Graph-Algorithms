@@ -220,7 +220,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             if (edge.isDirected()) {
                 Point circle = getPosPoint(origin.getX(), origin.getY(), destination.getX(), destination.getY());
                 paint.setStyle(Paint.Style.FILL);
-                canvas.drawCircle(circle.x, circle.y, 20, paint);
+                canvas.drawCircle(circle.x, circle.y,20, paint);
             }
             if (!edge.isIdle()) {
                 drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
@@ -232,38 +232,33 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     }
 
     private Point getPosPoint(float x0, float y0, float x1, float y1) {
+
         Point point = new Point();
 
-        float xLen = (x0 - x1);
-        float yLen = (y0 - y1);
-        float xMid = Math.abs(x0 + x1) / 20;
-
-
-        if (Math.abs(xLen) < 40) {
-            if (xLen < 0){
-                point.x = (int) (x1 + 10);
-            } else {
-                point.x = (int) (x1 - 10);
+        if (Math.abs(x1 - x0) < 40) {
+            point.x = (int) x1;
+            if (y0 < y1) {
+                point.y = (int) y1 - 50;
             }
-
-            if (yLen < 0){
-                point.y = (int) (y1 - 10);
-            } else {
-                point.y = (int) (y1 + 10);
+            else {
+                point.y = (int) y1 + 50;
             }
-
-
-
-        } else if (xLen > 10) {
-            point.y = (int) ((yLen * xMid / xLen) + y1);
-            point.x = (int) (x1 + xMid);
-        } else if (xLen < 1) {
-            point.y = (int) ((yLen * xMid / (-1 * xLen)) + y1);
-            point.x = (int) (x1 - xMid);
         }
-
+        else {
+            float m = (y1-y0)/(x1-x0);
+            float b = y0 - m * x0;
+            float totalLength = (float) Math.sqrt(Math.pow((y1-y0), 2)+Math.pow((x1-x0), 2));
+            float xEval = (float) (totalLength - 50) * (float) Math.cos(Math.atan((y1-y0)/(x1-x0)));
+            point.x = (int) (x0 - xEval);
+            if (x0 < x1) {
+                if (!(x0 < point.x && point.x < x1)) point.x = (int) (x0 + xEval);
+            }
+            else {
+                if (!(x1 < point.x && point.x < x0)) point.x = (int) (x0 + xEval);
+            }
+            point.y = (int) (m * point.x + b);
+        }
         return point;
-
     }
 
     // REQUIRES: None.
