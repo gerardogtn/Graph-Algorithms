@@ -8,9 +8,6 @@ import android.support.annotation.NonNull;
  */
 public class Edge implements Comparable<Edge>{
 
-    private int id;
-    private static int sCounter = 0;
-
     private Node origin;
     private Node destination;
 
@@ -24,11 +21,10 @@ public class Edge implements Comparable<Edge>{
     }
 
     public Edge(Node origin, Node destination, int weight, boolean isDirected) {
-        this.origin = origin;
+        this.origin      = origin;
         this.destination = destination;
-        this.weight = weight;
-        this.isDirected = isDirected;
-        this.id = ++sCounter;
+        this.weight      = weight;
+        this.isDirected  = isDirected;
     }
 
     public Edge(int originId, int destinationId, boolean isDirected){
@@ -62,24 +58,8 @@ public class Edge implements Comparable<Edge>{
         return mIsIdle;
     }
 
-    public void setOrigin(Node origin) {
-        this.origin = origin;
-    }
-
-    public void setDestination(Node destination) {
-        this.destination = destination;
-    }
-
     public boolean isDirected() {
         return isDirected;
-    }
-
-    public void setDirected(boolean isDirected) {
-        this.isDirected = isDirected;
-    }
-
-    public void setWeight(int weight) {
-        this.weight = weight;
     }
 
     public void setActive(boolean isActive) {
@@ -88,6 +68,29 @@ public class Edge implements Comparable<Edge>{
 
     public void setIdle(boolean mIsIdle) {
         this.mIsIdle = mIsIdle;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Edge edge = (Edge) o;
+
+        if (isDirected != edge.isDirected) return false;
+        if (weight != edge.weight) return false;
+        if (!origin.equals(edge.origin)) return false;
+        return destination.equals(edge.destination);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = origin.hashCode();
+        result = 31 * result + destination.hashCode();
+        result = 31 * result + (isDirected ? 1 : 0);
+        result = 31 * result + weight;
+        return result;
     }
 
     @Override
