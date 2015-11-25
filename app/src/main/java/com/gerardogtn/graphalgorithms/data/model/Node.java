@@ -13,11 +13,10 @@ public class Node implements Comparable<Node>{
     private int id;
 
     public static final int MAX_VALUE = 0x0FFFFFFF;
-
     public static final int COLOR = Color.BLUE;
     public static final int COLOR_VISITED = Color.ORANGE;
     public static final int COLOR_ACTIVE = Color.RED;
-    public static final float RADIUS =  50;
+    public static final float RADIUS =  25;
     public static final float RADIUS_SQUARED = (float) Math.pow(RADIUS, 2);
 
     private static int sCounter = 0;
