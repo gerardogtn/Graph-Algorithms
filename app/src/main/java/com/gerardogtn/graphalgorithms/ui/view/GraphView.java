@@ -18,6 +18,7 @@ import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.util.constant.Color;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
+import com.gerardogtn.graphalgorithms.util.task.DatabaseHandlerTask;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,9 +64,11 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private Node mCurrentNode;
     private Node mPreviousNode;
 
+    public static float sDensity;
     private OnEventListener insertListener;
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
+    private DatabaseHandlerTask mDatabaseTask;
 
 
     public GraphView(Context context) {
@@ -78,6 +81,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         mGraph = Graph.getInstance(false);
         mGraph.setOnGraphUpdateListener(this);
         mDbHandler = new GraphDbHandler(mContext);
+        sDensity = getResources().getDisplayMetrics().density;
+        mDatabaseTask = new DatabaseHandlerTask(this, mGraph, mDbHandler);
         setUpPaints();
         loadGraph();
     }
@@ -110,7 +115,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private void setUpAbstractTextPaint(Paint paint, int color) {
         paint.setColor(color);
         paint.setStyle(Paint.Style.FILL);
-        paint.setTextSize(24);
+        paint.setTextSize(14 * sDensity);
         paint.setAntiAlias(true);
     }
 
@@ -135,38 +140,28 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractTextPaint(mTextConnectionPaint, Color.PURPLE);
     }
 
+    public void setIsDialogActive(boolean isDialogActive){
+        mIsDialogActive = isDialogActive;
+    }
+
     // ASSUMES: If graph is directed all edges are directed.
     // REQUIRES: None.
     // MODIFIES: Database.
     // EFFECTS: Clear graph database and set to values in graph singleton
     public void loadGraph() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Graph.addNodesReverse(mDbHandler.getNodes());
-                Graph.addEdges(mDbHandler.getEdges());
-                if (!mDbHandler.getEdges().isEmpty()) {
-                    Graph.setDirected(mDbHandler.getEdges().get(0).isDirected());
-                }
-                redraw();
-            }
-        });
+        mDatabaseTask.setLoad();
+
+        Thread thread = new Thread(mDatabaseTask);
         thread.start();
     }
 
     // REQUIRES: None.
     // MODIFIES: Database.
     // EFFECTS: Clear graph singleton and set to values in database.
-    public void saveGraph() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mDbHandler.clearEdges();
-                mDbHandler.writeEdges(mGraph.getEdges());
-                mDbHandler.clearNodes();
-                mDbHandler.writeNodes(mGraph.getNodes());
-            }
-        });
+    public void writeGraph() {
+        mDatabaseTask.setWrite();
+
+        Thread thread = new Thread(mDatabaseTask);
         thread.start();
     }
 
@@ -197,7 +192,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
             canvas.drawCircle(node.getX(),
                     node.getY(),
-                    Node.RADIUS,
+                    Node.RADIUS * sDensity,
                     paint);
 
             canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mNodeTextPaint);
@@ -220,7 +215,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             if (edge.isDirected()) {
                 Point circle = getPosPoint(origin.getX(), origin.getY(), destination.getX(), destination.getY());
                 paint.setStyle(Paint.Style.FILL);
-                canvas.drawCircle(circle.x, circle.y,20, paint);
+                canvas.drawCircle(circle.x, circle.y,20 * sDensity, paint);
             }
             if (!edge.isIdle()) {
                 drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
@@ -248,7 +243,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             float m = (y1-y0)/(x1-x0);
             float b = y0 - m * x0;
             float totalLength = (float) Math.sqrt(Math.pow((y1-y0), 2)+Math.pow((x1-x0), 2));
-            float xEval = (float) (totalLength - 50) * (float) Math.cos(Math.atan((y1-y0)/(x1-x0)));
+            float xEval = (totalLength - 50) * (float) Math.cos(Math.atan((y1-y0)/(x1-x0)));
             point.x = (int) (x0 - xEval);
             if (x0 < x1) {
                 if (!(x0 < point.x && point.x < x1)) point.x = (int) (x0 + xEval);
@@ -326,7 +321,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this.
     // EFFECTS: Adds node to mNodes and redraw.
     public void addNode(final Node node) {
-        mGraph.addNode(node);
+        Graph.addNode(node);
         mCurrentNode = null;
         invalidate();
     }
@@ -444,13 +439,13 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public void clearNodes() {
         mDbHandler.clearNodes();
-        mGraph.clearNodes();
+        Graph.clearNodes();
         Node.resetCounter();
     }
 
     public void clearEdges() {
         mDbHandler.clearEdges();
-        mGraph.clearEdges();
+        Graph.clearEdges();
     }
 
     public void setOnStopListener(MainActivity onStopListener) {
