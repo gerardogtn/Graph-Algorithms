@@ -14,6 +14,15 @@ public class NodeDbSchema {
     public static final String COLUMN_IS_ACTIVE  = "active";
     public static final String COLUMN_IS_VISITED = "visited";
 
+    public static final String nodeColumns[] = new String[]{
+            NodeDbSchema.COLUMN_ID,
+            NodeDbSchema.COLUMN_DATA,
+            NodeDbSchema.COLUMN_X_POSITION,
+            NodeDbSchema.COLUMN_Y_POSITION,
+            NodeDbSchema.COLUMN_IS_VISITED,
+            NodeDbSchema.COLUMN_IS_ACTIVE
+    };
+
     public static final String CREATE_TABLE =
             "CREATE TABLE " + TABLE_NAME + " (" +
                     COLUMN_ID         + " INTEGER PRIMARY KEY ON CONFLICT REPLACE, " +

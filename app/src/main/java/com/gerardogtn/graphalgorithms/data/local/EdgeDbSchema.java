@@ -13,6 +13,15 @@ public class EdgeDbSchema {
     public static final String COLUMN_IS_DIRECTED      = "is_directed";
     public static final String COLUMN_IS_ACTIVE        = "is_active";
 
+    public static final String edgeColumns[] = new String[]{
+            EdgeDbSchema.COLUMN_ID,
+            EdgeDbSchema.COLUMN_ORIGIN_NODE,
+            EdgeDbSchema.COLUMN_DESTINATION_NODE,
+            EdgeDbSchema.COLUMN_WEIGHT,
+            EdgeDbSchema.COLUMN_IS_DIRECTED,
+            EdgeDbSchema.COLUMN_IS_ACTIVE
+    };
+
     public static final String CREATE_TABLE =
             "CREATE TABLE " + TABLE_NAME + "(" +
                     COLUMN_ID               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
