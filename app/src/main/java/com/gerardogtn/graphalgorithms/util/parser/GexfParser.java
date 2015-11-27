@@ -12,7 +12,6 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -108,7 +107,7 @@ public class GexfParser extends DefaultHandler {
     private void parseEdge(Attributes attributes) {
         Edge current;
 
-        int originId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.ORIGIN));
+        int originId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.SOURCE));
         int targetId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.TARGET));
         current = parseWeightIfExists(attributes, originId, targetId);
 
@@ -137,7 +136,7 @@ public class GexfParser extends DefaultHandler {
 
     // REQUIRES: None.
     // MODIFIES: None.
-    // EFFECTS:  Parses string with format "\a\d*" to int.
+    // EFFECTS:  Parses string with format "\a?\d*" to int.
     private int parseIntegerStringWithLeadingChar(String string) {
         try {
             return Integer.parseInt(string);

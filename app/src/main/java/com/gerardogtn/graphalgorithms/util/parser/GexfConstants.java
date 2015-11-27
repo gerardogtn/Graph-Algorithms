@@ -16,7 +16,7 @@ public class GexfConstants {
     public static final String ID = "id";
 
     public static final String EDGE = "edge";
-    public static final String ORIGIN = "origin";
+    public static final String SOURCE = "source";
     public static final String TARGET = "target";
     public static final String WEIGHT = "weight";
 
