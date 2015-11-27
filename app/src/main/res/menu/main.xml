@@ -15,10 +15,6 @@
         android:icon="@drawable/ic_share"
         app:showAsAction="ifRoom"/>
 
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
-
     <item android:id="@+id/action_clear"
         android:title="@string/action_clear_graph"
         app:showAsAction="never"/>
@@ -31,6 +27,6 @@
         android:title="@string/is_directed"
         app:showAsAction="never"
         android:checkable="true"
-        android:checked="false"/>
+        android:checked="true"/>
 
 </menu>
