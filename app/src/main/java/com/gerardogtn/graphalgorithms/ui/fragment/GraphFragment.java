@@ -2,7 +2,6 @@ package com.gerardogtn.graphalgorithms.ui.fragment;
 
 
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
@@ -23,7 +22,7 @@ import com.gerardogtn.graphalgorithms.ui.view.GraphView;
  * A simple {@link Fragment} subclass.
  */
 public class GraphFragment extends Fragment implements GraphView.OnEventListener,
-        AddEdgeDialog.OnCreateEdgeListener{
+        AddEdgeDialog.OnEdgeListener {
 
     public static final String TAG_NODE_DIALOG = "NodeDialog";
     public static final String TAG_EDGE_DIALOG = "EdgeDialog";
@@ -49,8 +48,8 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
 
     @Override
     public void onPause() {
-        super.onStop();
-        graphView.saveGraph();
+        super.onPause();
+        graphView.writeGraph();
     }
 
     @Override
@@ -71,6 +70,11 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
     @Override
     public void onCreateEdge(int weight) {
         graphView.addEdge(weight);
+    }
+
+    @Override
+    public void onDismissEdgeDialog() {
+        graphView.setIsDialogActive(false);
     }
 
     public void addNode(Node node){
@@ -100,7 +104,7 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
     // REQUIRES: None.
     // MODIFIES: graphview.
     // EFFECTS:  Resets graphview.
-    public void resetGraph(){
+    public synchronized void resetGraph(){
         graphView.resetGraph();
     }
 
@@ -108,7 +112,7 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
     // REQUIRES: None.
     // MODIFIES: graphview.
     // EFFECTS: Removes edges and nodes and redraws.
-    public void clearGraph() {
+    public synchronized void clearGraph() {
         graphView.clearEdges();
         graphView.clearNodes();
         graphView.redraw();
@@ -121,7 +125,7 @@ public class GraphFragment extends Fragment implements GraphView.OnEventListener
     // REQUIRES: None.
     // MODIFIES: None.
     // EFFECTS: Returns false if there was an error when saving, true otherwise.
-    public boolean writeGraphImage() {
+    public synchronized boolean writeGraphImage() {
         return graphView.writeGraphImage();
     }
 }
