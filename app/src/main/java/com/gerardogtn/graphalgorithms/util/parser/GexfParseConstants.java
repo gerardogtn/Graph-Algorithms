@@ -3,7 +3,7 @@ package com.gerardogtn.graphalgorithms.util.parser;
 /**
  * Created by gerardogtn on 11/20/15.
  */
-public class GexfConstants {
+public class GexfParseConstants {
 
     public static final String GEXF = "gexf";
 
@@ -19,7 +19,4 @@ public class GexfConstants {
     public static final String SOURCE = "source";
     public static final String TARGET = "target";
     public static final String WEIGHT = "weight";
-
-
-
 }

@@ -57,7 +57,7 @@ public class GexfParser extends DefaultHandler {
     // EFFECTS:  If first tag is gexf, start parsing. Else throw ParseGexfException.
     // TODO: Change format not supported to an enum in exception.
     private void startGexfParse(@NonNull String qName) {
-        if (qName.toLowerCase().equals(GexfConstants.GEXF)) {
+        if (qName.toLowerCase().equals(GexfParseConstants.GEXF)) {
             parseStarted = true;
         } else {
             throw new ParseGexfException("Format not supported");
@@ -70,11 +70,11 @@ public class GexfParser extends DefaultHandler {
     // EFFECTS:  Checks for appropiate parse and handles case.
     // TODO: Check usage of @Nonnull annotation.
     private void parseGexf(String qName, Attributes attributes) {
-        if (qName.toLowerCase().equals(GexfConstants.GRAPH)) {
+        if (qName.toLowerCase().equals(GexfParseConstants.GRAPH)) {
             parseGraphValues(attributes);
-        } else if (qName.toLowerCase().equals(GexfConstants.NODE)) {
+        } else if (qName.toLowerCase().equals(GexfParseConstants.NODE)) {
             parseNode(attributes);
-        } else if (qName.toLowerCase().equals(GexfConstants.EDGE)) {
+        } else if (qName.toLowerCase().equals(GexfParseConstants.EDGE)) {
             parseEdge(attributes);
         }
     }
@@ -83,7 +83,7 @@ public class GexfParser extends DefaultHandler {
     // MODIFIES: this.
     // EFFECTS:  If DEFAULT_EDGE_TYPE is directed, set Graph to directed else set graph to undirected.
     private void parseGraphValues(Attributes attributes) {
-        isDirected = (attributes.getValue(GexfConstants.DEFAULT_EDGE_TYPE).equals(GexfConstants.DIRECTED));
+        isDirected = (attributes.getValue(GexfParseConstants.DEFAULT_EDGE_TYPE).equals(GexfParseConstants.DIRECTED));
         Graph.setDirected(isDirected);
     }
 
@@ -93,7 +93,7 @@ public class GexfParser extends DefaultHandler {
     // the size of nodes is greater than max nodes throws a ParseGexfException.
     private void parseNode(Attributes attributes) {
         Node node = new Node(0);
-        node.setId(parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.ID)));
+        node.setId(parseIntegerStringWithLeadingChar(attributes.getValue(GexfParseConstants.ID)));
         nodes.add(node);
 
         if (nodes.size() > MAX_NODES) {
@@ -107,8 +107,8 @@ public class GexfParser extends DefaultHandler {
     private void parseEdge(Attributes attributes) {
         Edge current;
 
-        int originId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.SOURCE));
-        int targetId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfConstants.TARGET));
+        int originId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfParseConstants.SOURCE));
+        int targetId = parseIntegerStringWithLeadingChar(attributes.getValue(GexfParseConstants.TARGET));
         current = parseWeightIfExists(attributes, originId, targetId);
 
         edges.add(current);
@@ -124,8 +124,8 @@ public class GexfParser extends DefaultHandler {
     private Edge parseWeightIfExists(Attributes attributes, int originId, int targetId) {
         Edge current;
 
-        if (attributes.getValue(GexfConstants.WEIGHT) != null) {
-            float weight = Float.parseFloat(attributes.getValue(GexfConstants.WEIGHT));
+        if (attributes.getValue(GexfParseConstants.WEIGHT) != null) {
+            float weight = Float.parseFloat(attributes.getValue(GexfParseConstants.WEIGHT));
             current = new Edge(getNodeById(originId), getNodeById(targetId), (int) weight, isDirected);
         } else {
             current = new Edge(getNodeById(originId), getNodeById(targetId), 0, isDirected);
