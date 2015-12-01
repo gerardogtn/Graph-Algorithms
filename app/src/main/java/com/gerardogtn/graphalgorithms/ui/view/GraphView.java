@@ -1,12 +1,10 @@
 package com.gerardogtn.graphalgorithms.ui.view;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.support.design.widget.Snackbar;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,15 +14,11 @@ import com.gerardogtn.graphalgorithms.data.model.Edge;
 import com.gerardogtn.graphalgorithms.data.model.Graph;
 import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
-import com.gerardogtn.graphalgorithms.util.constant.Color;
-import com.gerardogtn.graphalgorithms.util.file.FileConstants;
+import com.gerardogtn.graphalgorithms.util.constant.GraphViewPaint;
 import com.gerardogtn.graphalgorithms.util.file.GraphImageWriter;
 import com.gerardogtn.graphalgorithms.util.task.AlgorithmAnimationTask;
 import com.gerardogtn.graphalgorithms.util.task.DatabaseHandlerTask;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Iterator;
 
 
@@ -35,30 +29,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
 
     public static final String TAG = GraphView.class.getSimpleName();
 
-    public static final int BACKGROUND_COLOR = Color.BEIGE;
-    public static final int NODE_TEXT_COLOR = Color.WHITE;
-    public static final int EDGE_TEXT_COLOR = Color.PINK;
-
     private boolean mWasMoved = false;
     private boolean mIsDialogActive = false;
     private boolean mShowConnections = false;
-
-    private Paint mBackgroundPaint;
-
-    private Paint mNodePaint = new Paint();
-    private Paint mNodeActivePaint = new Paint();
-    private Paint mNodeVisitedPaint = new Paint();
-    private Paint mNodeTextPaint = new Paint();
-
-    private Paint mEdgePaint = new Paint();
-    private Paint mEdgeActivePaint = new Paint();
-    private Paint mEdgeIdlePaint = new Paint();
-    private Paint mEdgeTextPaint = new Paint();
-    private Paint mEdgeIdleTextPaint = new Paint();
-    private Paint mEdgeArrowPaint = new Paint();
-
-    private Paint mConnectionPaint = new Paint();
-    private Paint mTextConnectionPaint = new Paint();
 
     private Graph mGraph;
     private Node mCurrentNode;
@@ -85,61 +58,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
         sDensity = getResources().getDisplayMetrics().density;
         mDatabaseTask = new DatabaseHandlerTask(this, mGraph, mDbHandler);
         mAlgorithmAnimationTask = new AlgorithmAnimationTask(mGraph, 0, mStopListener);
-        setUpPaints();
         loadGraph();
-    }
-
-
-    private void setUpPaints() {
-        setUpBackgroundPaint();
-        setUpNodePaints();
-        setUpEdgePaint();
-        setUpConnectionPaint();
-    }
-
-    private void setUpBackgroundPaint() {
-        mBackgroundPaint = new Paint();
-        mBackgroundPaint.setColor(BACKGROUND_COLOR);
-    }
-
-    private void setUpNodePaints() {
-        setUpAbstractNodePaint(mNodePaint, Node.COLOR);
-        setUpAbstractNodePaint(mNodeVisitedPaint, Node.COLOR_VISITED);
-        setUpAbstractNodePaint(mNodeActivePaint, Node.COLOR_ACTIVE);
-        setUpAbstractTextPaint(mNodeTextPaint, NODE_TEXT_COLOR);
-    }
-
-    private void setUpAbstractNodePaint(Paint paint, int color) {
-        paint.setColor(color);
-        paint.setAntiAlias(true);
-    }
-
-    private void setUpAbstractTextPaint(Paint paint, int color) {
-        paint.setColor(color);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setTextSize(14 * sDensity);
-        paint.setAntiAlias(true);
-    }
-
-    private void setUpEdgePaint() {
-        setUpAbstractEdgePaint(mEdgePaint, Color.BLACK);
-        setUpAbstractEdgePaint(mEdgeActivePaint, Color.RED);
-        setUpAbstractEdgePaint(mEdgeIdlePaint, Color.BLUE_GRAY);
-        setUpAbstractTextPaint(mEdgeTextPaint, EDGE_TEXT_COLOR);
-        setUpAbstractTextPaint(mEdgeIdleTextPaint, Color.BLUE_GRAY);
-        setUpAbstractTextPaint(mEdgeArrowPaint, Color.BLACK);
-    }
-
-    private void setUpAbstractEdgePaint(Paint paint, int color) {
-        paint.setColor(color);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(5);
-        paint.setAntiAlias(true);
-    }
-
-    private void setUpConnectionPaint() {
-        setUpAbstractEdgePaint(mConnectionPaint, Color.PURPLE);
-        setUpAbstractTextPaint(mTextConnectionPaint, Color.PURPLE);
     }
 
     public void setIsDialogActive(boolean isDialogActive) {
@@ -171,7 +90,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawPaint(mBackgroundPaint);
+        canvas.drawPaint(GraphViewPaint.BACKGROUND);
         drawEdges(canvas);
         if (mShowConnections) {
             drawConnections(canvas);
@@ -187,15 +106,15 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
         Iterator<Node> iterator = mGraph.getNodes().descendingIterator();
         while (iterator.hasNext()) {
             Node node = iterator.next();
-            Paint paint = (node.wasVisited() ? mNodeVisitedPaint : mNodePaint);
-            paint = (node.isActive() ? mNodeActivePaint : paint);
+            Paint paint = (node.wasVisited() ? GraphViewPaint.NODE_VISITED : GraphViewPaint.NODE);
+            paint = (node.isActive() ? GraphViewPaint.NODE_ACTIVE : paint);
 
             canvas.drawCircle(node.getX(),
                     node.getY(),
                     Node.RADIUS * sDensity,
                     paint);
 
-            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), mNodeTextPaint);
+            canvas.drawText(String.valueOf(node.getId()), node.getX(), node.getY(), GraphViewPaint.NODE_TEXT);
         }
     }
 
@@ -208,8 +127,8 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
             Node origin = edge.getOrigin();
             Node destination = edge.getDestination();
 
-            Paint paint = (edge.isActive() ? mEdgeActivePaint : mEdgePaint);
-            paint = (edge.isIdle() ? mEdgeIdlePaint : paint);
+            Paint paint = (edge.isActive() ? GraphViewPaint.EDGE_ACTIVE : GraphViewPaint.EDGE);
+            paint = (edge.isIdle() ? GraphViewPaint.EDGE_IDLE : paint);
 
             canvas.drawLine(origin.getX(), origin.getY(), destination.getX(), destination.getY(), paint);
             if (edge.isDirected()) {
@@ -218,7 +137,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
                 canvas.drawCircle(circle.x, circle.y, 10 * sDensity, paint);
             }
             if (!edge.isIdle()) {
-                drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
+                drawTextOnLine(canvas, edge.getWeight() + "", GraphViewPaint.EDGE_TEXT,
                         origin.getX(), destination.getX(),
                         origin.getY(), destination.getY());
             }
@@ -261,9 +180,9 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
         for (Node node : mGraph.getNodes()) {
             Node parent = node.getParent();
             if (node.getDistance() != Integer.MAX_VALUE && parent != null && parent.getId() != node.getId()) {
-                canvas.drawLine(node.getX(), node.getY(), parent.getX(), parent.getY(), mConnectionPaint);
+                canvas.drawLine(node.getX(), node.getY(), parent.getX(), parent.getY(), GraphViewPaint.CONNECTION);
 
-                drawTextOnLine(canvas, node.getDistance() + "", mTextConnectionPaint,
+                drawTextOnLine(canvas, node.getDistance() + "", GraphViewPaint.CONNECTION_TEXT,
                         node.getX(), parent.getX(),
                         node.getY(), parent.getY());
             }
@@ -426,6 +345,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener {
 
     public interface OnEventListener {
         void showEdgeDialog();
+
         void showNodeDialog();
     }
 
