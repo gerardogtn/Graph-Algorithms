@@ -18,6 +18,8 @@ import com.gerardogtn.graphalgorithms.data.model.Node;
 import com.gerardogtn.graphalgorithms.ui.activity.MainActivity;
 import com.gerardogtn.graphalgorithms.util.constant.Color;
 import com.gerardogtn.graphalgorithms.util.file.FileConstants;
+import com.gerardogtn.graphalgorithms.util.file.GraphImageWriter;
+import com.gerardogtn.graphalgorithms.util.task.AlgorithmAnimationTask;
 import com.gerardogtn.graphalgorithms.util.task.DatabaseHandlerTask;
 
 import java.io.File;
@@ -29,15 +31,13 @@ import java.util.Iterator;
 /**
  * Created by gerardogtn on 11/1/15.
  */
-public class GraphView extends View implements Graph.OnGraphUpdateListener, Runnable {
+public class GraphView extends View implements Graph.OnGraphUpdateListener {
 
     public static final String TAG = GraphView.class.getSimpleName();
 
     public static final int BACKGROUND_COLOR = Color.BEIGE;
     public static final int NODE_TEXT_COLOR = Color.WHITE;
     public static final int EDGE_TEXT_COLOR = Color.PINK;
-
-    private int mIndex = 0;
 
     private boolean mWasMoved = false;
     private boolean mIsDialogActive = false;
@@ -69,6 +69,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     private GraphDbHandler mDbHandler;
     private OnStopAnimationListener mStopListener;
     private DatabaseHandlerTask mDatabaseTask;
+    private AlgorithmAnimationTask mAlgorithmAnimationTask;
 
 
     public GraphView(Context context) {
@@ -78,11 +79,12 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
         Context mContext = context.getApplicationContext();
-        mGraph = Graph.getInstance(false);
+        mGraph = Graph.getInstance(true);
         mGraph.setOnGraphUpdateListener(this);
         mDbHandler = new GraphDbHandler(mContext);
         sDensity = getResources().getDisplayMetrics().density;
         mDatabaseTask = new DatabaseHandlerTask(this, mGraph, mDbHandler);
+        mAlgorithmAnimationTask = new AlgorithmAnimationTask(mGraph, 0, mStopListener);
         setUpPaints();
         loadGraph();
     }
@@ -140,7 +142,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         setUpAbstractTextPaint(mTextConnectionPaint, Color.PURPLE);
     }
 
-    public void setIsDialogActive(boolean isDialogActive){
+    public void setIsDialogActive(boolean isDialogActive) {
         mIsDialogActive = isDialogActive;
     }
 
@@ -150,7 +152,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // EFFECTS: Clear graph database and set to values in graph singleton
     public void loadGraph() {
         mDatabaseTask.setLoad();
-
         Thread thread = new Thread(mDatabaseTask);
         thread.start();
     }
@@ -160,7 +161,6 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // EFFECTS: Clear graph singleton and set to values in database.
     public void writeGraph() {
         mDatabaseTask.setWrite();
-
         Thread thread = new Thread(mDatabaseTask);
         thread.start();
     }
@@ -183,7 +183,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // REQUIRES: None.
     // MODIFIES: None.
     // EFFECTS:  Draws nodes to screen from first added to last added.
-    private void drawNodes(Canvas canvas) {
+    public void drawNodes(Canvas canvas) {
         Iterator<Node> iterator = mGraph.getNodes().descendingIterator();
         while (iterator.hasNext()) {
             Node node = iterator.next();
@@ -203,7 +203,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // REQUIRES: None.
     // MODIFIES: None.
     // EFFECTS:  Draws edges.
-    private void drawEdges(Canvas canvas) {
+    public void drawEdges(Canvas canvas) {
         for (Edge edge : mGraph.getEdges()) {
             Node origin = edge.getOrigin();
             Node destination = edge.getDestination();
@@ -215,7 +215,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             if (edge.isDirected()) {
                 Point circle = getPosPoint(origin.getX(), origin.getY(), destination.getX(), destination.getY());
                 paint.setStyle(Paint.Style.FILL);
-                canvas.drawCircle(circle.x, circle.y,20 * sDensity, paint);
+                canvas.drawCircle(circle.x, circle.y, 10 * sDensity, paint);
             }
             if (!edge.isIdle()) {
                 drawTextOnLine(canvas, edge.getWeight() + "", mEdgeTextPaint,
@@ -234,21 +234,18 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
             point.x = (int) x1;
             if (y0 < y1) {
                 point.y = (int) y1 - 50;
-            }
-            else {
+            } else {
                 point.y = (int) y1 + 50;
             }
-        }
-        else {
-            float m = (y1-y0)/(x1-x0);
+        } else {
+            float m = (y1 - y0) / (x1 - x0);
             float b = y0 - m * x0;
-            float totalLength = (float) Math.sqrt(Math.pow((y1-y0), 2)+Math.pow((x1-x0), 2));
-            float xEval = (totalLength - 50) * (float) Math.cos(Math.atan((y1-y0)/(x1-x0)));
+            float totalLength = (float) Math.sqrt(Math.pow((y1 - y0), 2) + Math.pow((x1 - x0), 2));
+            float xEval = (totalLength - 50) * (float) Math.cos(Math.atan((y1 - y0) / (x1 - x0)));
             point.x = (int) (x0 - xEval);
             if (x0 < x1) {
                 if (!(x0 < point.x && point.x < x1)) point.x = (int) (x0 + xEval);
-            }
-            else {
+            } else {
                 if (!(x1 < point.x && point.x < x0)) point.x = (int) (x0 + xEval);
             }
             point.y = (int) (m * point.x + b);
@@ -260,7 +257,7 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: canvas.
     // EFFECTS : If node has a parent not null and not equal to itself and with a distance less than
     // max, then draw a line connecting node to parent with a text showing its distance.
-    private void drawConnections(Canvas canvas) {
+    public void drawConnections(Canvas canvas) {
         for (Node node : mGraph.getNodes()) {
             Node parent = node.getParent();
             if (node.getDistance() != Integer.MAX_VALUE && parent != null && parent.getId() != node.getId()) {
@@ -392,45 +389,11 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
     // MODIFIES: this
     // EFFECTS:  Initializes mIndex, and starts a new thread.
     public void executeAlgorithm(int index) {
-        mIndex = index;
-        Thread thread = new Thread(this);
+        mAlgorithmAnimationTask.setIndex(index);
+        Thread thread = new Thread(mAlgorithmAnimationTask);
         thread.start();
     }
 
-    // REQUIRES: None.
-    // MODIFIES: None.
-    // EFFECTS:  Executes appropiate algorithm if  0 <= mIndex <= 5, else if mIndex =  6 throws
-    // IllegalArgumentException, else trows IndexOutOfBoundsException.
-    @Override
-    public void run() {
-
-        int index = mIndex + 1;
-
-        try {
-            if (index == 1) {
-                mGraph.dfs();
-            } else if (index == 2) {
-                mGraph.bfs();
-            } else if (index == 3) {
-                mGraph.prim();
-            } else if (index == 4) {
-                mGraph.kruskal();
-            } else if (index == 5) {
-                mGraph.dijkstra();
-            } else if (index == 6) {
-                mGraph.bellmanFord();
-            } else if (index == 7) {
-                throw new IllegalArgumentException("Floyd Warshall is not implemented in GraphView");
-            } else {
-                throw new IndexOutOfBoundsException();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            e.printStackTrace();
-        }
-
-        mStopListener.stopAnimation(true);
-    }
 
     public void resetGraph() {
         mGraph.reset();
@@ -450,40 +413,19 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
 
     public void setOnStopListener(MainActivity onStopListener) {
         this.mStopListener = onStopListener;
+        mAlgorithmAnimationTask.setListener(onStopListener);
     }
 
     // REQUIRES: None.
     // MODIFIES: this.
     // EFFECTS:  Saves graphview as JPEG, if save was unsuccesful return false, otherwise true.
     public boolean writeGraphImage() {
-        Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
-        Canvas canvas = new Canvas(bitmap);
-
-        canvas.drawPaint(mBackgroundPaint);
-        drawEdges(canvas);
-        if (mShowConnections) {
-            drawConnections(canvas);
-        }
-        drawNodes(canvas);
-
-        File file = new File(FileConstants.GRAPH_IMAGE_PATH);
-
-        try {
-            FileOutputStream stream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Snackbar.make(this, "Couldn't save image", Snackbar.LENGTH_SHORT).show();
-            return false;
-        }
-
-        return true;
+        GraphImageWriter imageWriter = new GraphImageWriter(this, mShowConnections);
+        return imageWriter.writeImage();
     }
 
     public interface OnEventListener {
         void showEdgeDialog();
-
         void showNodeDialog();
     }
 
@@ -491,25 +433,4 @@ public class GraphView extends View implements Graph.OnGraphUpdateListener, Runn
         void stopAnimation(boolean showClearButton);
     }
 
-
-    private static class SaveBitmapTask implements Runnable {
-
-        private static SaveBitmapTask mTask;
-
-        private SaveBitmapTask() {
-
-        }
-
-        public static SaveBitmapTask getInstance() {
-            if (mTask == null) {
-                mTask = new SaveBitmapTask();
-            }
-            return mTask;
-        }
-
-        @Override
-        public void run() {
-
-        }
-    }
 }
