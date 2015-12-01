@@ -183,6 +183,7 @@ public class FloydWarshallDialog extends DialogFragment implements View.OnClickL
                     int newValue = adjMatrix[j][k];
                     if (newValue > adjMatrix[j][i] + adjMatrix[i][k]){
                         newValue = adjMatrix[j][i] + adjMatrix[i][k];
+                        adjMatrix[j][k] = newValue;
                         updateValueAtPosition(j, k, newValue);
                         handleStepper();
                         mAdapter.makeModified(j, k, false);
